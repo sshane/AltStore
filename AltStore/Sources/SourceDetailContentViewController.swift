@@ -408,7 +408,8 @@ private extension SourceDetailContentViewController
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                 if let installedApp = storeApp.installedApp, installedApp.isUpdateAvailable
                 {
-                    AppManager.shared.update(installedApp, presentingViewController: self) { result in
+                    // navigationController for correct fallback logic if we're dismissed.
+                    AppManager.shared.update(installedApp, presentingViewController: self.navigationController) { result in
                         continuation.resume(with: result.map { _ in () })
                     }
                     
@@ -417,7 +418,8 @@ private extension SourceDetailContentViewController
                 else
                 {
                     Task<Void, Never> { @MainActor in
-                        await AppManager.shared.installAsync(storeApp, presentingViewController: self) { result in
+                        // navigationController for correct fallback logic if we're dismissed.
+                        await AppManager.shared.installAsync(storeApp, presentingViewController: self.navigationController) { result in
                             continuation.resume(with: result.map { _ in () })
                         }
                         
