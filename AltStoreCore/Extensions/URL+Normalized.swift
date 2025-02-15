@@ -39,7 +39,7 @@ public extension URL
         // 5. Remove duplicate slashes
         let path = components.path.replacingOccurrences(of: "//", with: "/") // Only remove duplicate slashes from path, not entire URL.
         normalizedURL += path // path has leading `/`
-                
+        
         // 6. Convert to lowercase
         normalizedURL = normalizedURL.lowercased()
         
