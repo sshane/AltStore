@@ -355,7 +355,14 @@ private extension MyAppsViewController
             
             cell.bannerView.iconImageView.isIndicatingActivity = true
             
+            #if NOTARIZED
+            // Hide "Expires in" button for AltStore.
+            cell.bannerView.button.isHidden = (installedApp.bundleIdentifier == StoreApp.altstoreAppID)
+            cell.bannerView.buttonLabel.isHidden = (installedApp.bundleIdentifier == StoreApp.altstoreAppID)
+            #else
             cell.bannerView.buttonLabel.isHidden = false
+            #endif
+            
             cell.bannerView.buttonLabel.text = NSLocalizedString("Expires in", comment: "")
             
             cell.bannerView.button.removeTarget(self, action: nil, for: .primaryActionTriggered)
@@ -439,6 +446,7 @@ private extension MyAppsViewController
             cell.tintColor = UIColor.gray
             
             cell.bannerView.iconImageView.isIndicatingActivity = true
+            cell.bannerView.button.isHidden = false // Always show activate button
             cell.bannerView.buttonLabel.isHidden = true
             cell.bannerView.alpha = 1.0
             

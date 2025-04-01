@@ -671,14 +671,21 @@ private extension AuthenticationOperation
     
     func showRefreshScreenIfNecessary(signer: ALTSigner, session: ALTAppleAPISession, completionHandler: @escaping (Bool) -> Void)
     {
+        #if NOTARIZED
+        
+        // Notarized builds never need to ask user to refresh AltStore.
+        completionHandler(false)
+        
+        #else
+        
         guard let application = ALTApplication(fileURL: Bundle.main.bundleURL), let provisioningProfile = application.provisioningProfile else { return completionHandler(false) }
         
         // If we're not using the same certificate used to install AltStore, warn user that they need to refresh.
         guard !provisioningProfile.certificates.contains(signer.certificate) else { return completionHandler(false) }
         
-#if DEBUG
+        #if DEBUG
         completionHandler(false)
-#else
+        #else
         DispatchQueue.main.async {
             let context = AuthenticatedOperationContext(context: self.context)
             context.operations.removeAllObjects() // Prevent deadlock due to endless waiting on previous operations to finish.
@@ -694,7 +701,9 @@ private extension AuthenticationOperation
                 completionHandler(false)
             }
         }
-#endif
+        #endif // DEBUG
+        
+        #endif // NOTARIZED
     }
 }
 

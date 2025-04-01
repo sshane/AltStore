@@ -260,6 +260,7 @@ public extension InstalledApp
                                              sortedBy: [NSSortDescriptor(keyPath: \InstalledApp.expirationDate, ascending: true)],
                                              in: context)
         
+        #if !NOTARIZED
         if let altStoreApp = InstalledApp.fetchAltStore(in: context)
         {
             // Refresh AltStore last since it causes app to quit.
@@ -278,6 +279,7 @@ public extension InstalledApp
                 installedApps.append(altStoreApp)
             }
         }
+        #endif
         
         return installedApps
     }
@@ -300,6 +302,7 @@ public extension InstalledApp
                                              sortedBy: [NSSortDescriptor(keyPath: \InstalledApp.expirationDate, ascending: true)],
                                              in: context)
         
+        #if !NOTARIZED
         if let altStoreApp = InstalledApp.fetchAltStore(in: context), altStoreApp.refreshedDate < date
         {
             if let storeApp = altStoreApp.storeApp
@@ -316,6 +319,7 @@ public extension InstalledApp
                 installedApps.append(altStoreApp)
             }
         }
+        #endif
         
         return installedApps
     }
