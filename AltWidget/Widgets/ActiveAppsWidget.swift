@@ -140,7 +140,7 @@ private struct ActiveAppsWidgetView: View
     }
     
     private var placeholder: some View {
-        Text("App Not Found")
+        Text("No Active Apps")
             .font(.system(.body, design: .rounded))
             .fontWeight(.semibold)
             .foregroundColor(Color.white.opacity(0.4))

@@ -20,9 +20,15 @@ public class ViewAppIntentHandler: NSObject, ViewAppIntentHandling
             }
             
             DatabaseManager.shared.persistentContainer.performBackgroundTask { (context) in
-                let apps = InstalledApp.all(in: context).map { (installedApp) in
-                    return App(identifier: installedApp.bundleIdentifier, display: installedApp.name)
-                }
+                let apps = InstalledApp.all(in: context)
+                    .map { (installedApp) in
+                        return App(identifier: installedApp.bundleIdentifier, display: installedApp.name)
+                    }
+                    #if NOTARIZED
+                    .filter {
+                        $0.identifier != StoreApp.altstoreAppID
+                    }
+                    #endif
                 
                 let collection = INObjectCollection(items: apps)
                 completion(collection, nil)

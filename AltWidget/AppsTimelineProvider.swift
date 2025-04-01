@@ -185,8 +185,12 @@ extension AppsTimelineProvider: TimelineProvider
                 let fetchRequest = InstalledApp.activeAppsFetchRequest() as! NSFetchRequest<NSDictionary>
                 fetchRequest.resultType = .dictionaryResultType
                 fetchRequest.propertiesToFetch = [#keyPath(InstalledApp.bundleIdentifier)]
-                
+                                
                 let bundleIDs = try context.fetch(fetchRequest).compactMap { $0[#keyPath(InstalledApp.bundleIdentifier)] as? String }
+                    #if NOTARIZED
+                    .filter { $0 != StoreApp.altstoreAppID }
+                    #endif
+                
                 return bundleIDs
             }
             
@@ -208,20 +212,44 @@ extension AppsTimelineProvider: IntentTimelineProvider
     func getSnapshot(for intent: Intent, in context: Context, completion: @escaping (AppsEntry) -> Void)
     {
         Task<Void, Never> {
-            let bundleIDs = [intent.app?.identifier ?? StoreApp.altstoreAppID]
+            #if NOTARIZED
+            let bundleID = if let identifier = intent.app?.identifier {
+                identifier
+            } else {
+                await self.fetchActiveAppBundleIDs().first
+            }
+            #else
+            let bundleID: String? = intent.app?.identifier ?? StoreApp.altstoreAppID
+            #endif
             
-            let snapshot = await self.snapshot(for: bundleIDs)
-            completion(snapshot)
+            if let bundleID
+            {
+                let snapshot = await self.snapshot(for: [bundleID])
+                completion(snapshot)
+            }
+            else
+            {
+                let snapshot = AppsEntry(date: Date(), apps: [], isPlaceholder: true)
+                completion(snapshot)
+            }
         }
     }
     
     func getTimeline(for intent: Intent, in context: Context, completion: @escaping (Timeline<AppsEntry>) -> Void)
     {
         Task<Void, Never> {
-            let bundleIDs = [intent.app?.identifier ?? StoreApp.altstoreAppID]
-            
-            let timeline = await self.timeline(for: bundleIDs)
-            completion(timeline)
+            if let bundleID = intent.app?.identifier
+            {
+                let timeline = await self.timeline(for: [bundleID])
+                completion(timeline)
+            }
+            else
+            {
+                let snapshot = AppsEntry(date: Date(), apps: [])
+                
+                let timeline = Timeline<AppsEntry>(entries: [snapshot], policy: .never)
+                completion(timeline)
+            }
         }
     }
 }

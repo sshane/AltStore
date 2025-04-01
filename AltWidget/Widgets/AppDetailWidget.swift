@@ -116,17 +116,29 @@ private struct AppDetailWidgetView: View
             }
             else
             {
-                VStack {
+                VStack(spacing: 8) {
                     // Put conditional inside VStack, or else an empty view will be returned
                     // if isPlaceholder == false, which messes up layout.
-                    if !entry.isPlaceholder
+                    if entry.isPlaceholder
                     {
-                        Text("App Not Found")
+                        Text("No Active Apps")
                             .font(.system(.body, design: .rounded))
                             .fontWeight(.semibold)
-                            .foregroundColor(Color.white.opacity(0.4))
+                    }
+                    else
+                    {
+                        Text("Choose App")
+                            .font(.system(.body, design: .rounded))
+                            .fontWeight(.semibold)
+                        
+                        Text("Edit widget to choose an app to display.")
+                            .font(.system(.caption))
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 8)
                     }
                 }
+                .foregroundColor(Color.white.opacity(0.4))
+                .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
