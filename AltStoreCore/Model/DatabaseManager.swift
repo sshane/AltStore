@@ -410,6 +410,15 @@ private extension DatabaseManager
                 installedApp.version = version
             }
             
+            #if NOTARIZED
+            
+            // HACK: Set expirationDate to distant past to ensure AltStore stays at top of My Apps list.
+            installedApp.expirationDate = .distantPast
+            
+            _ = (cachedRefreshedDate, cachedExpirationDate) // Silence unused variable warning.
+            
+            #else
+            
             if installedApp.refreshedDate < cachedRefreshedDate
             {
                 // Embedded provisioning profile has a creation date older than our refreshed date.
@@ -419,6 +428,8 @@ private extension DatabaseManager
                 installedApp.refreshedDate = cachedRefreshedDate
                 installedApp.expirationDate = cachedExpirationDate
             }
+            
+            #endif
             
             do
             {
