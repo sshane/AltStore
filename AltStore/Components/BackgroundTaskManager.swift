@@ -48,6 +48,12 @@ extension BackgroundTaskManager
 {
     func performExtendedBackgroundTask(taskHandler: @escaping ((Result<Void, Error>, @escaping () -> Void) -> Void))
     {
+        #if NOTARIZED
+        
+        taskHandler(.success(())) {}
+        
+        #else
+        
         func finish()
         {
             self.player.stop()
@@ -85,6 +91,8 @@ extension BackgroundTaskManager
                 }
             }
         }
+        
+        #endif
     }
 }
 
