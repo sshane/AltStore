@@ -217,12 +217,21 @@ public extension InstalledApp
             "(%K == NO OR %K == YES)"
         ].joined(separator: " ")
         
-        fetchRequest.predicate = NSPredicate(format: predicateFormat,
-                                             #keyPath(InstalledApp.isActive), #keyPath(InstalledApp.storeApp), #keyPath(InstalledApp.storeApp.latestSupportedVersion),
-                                             #keyPath(InstalledApp.storeApp.latestSupportedVersion.version), #keyPath(InstalledApp.version),
-                                             #keyPath(InstalledApp.storeApp.latestSupportedVersion._buildVersion), #keyPath(InstalledApp.storeBuildVersion),
-                                             #keyPath(InstalledApp.storeApp.latestSupportedVersion._buildVersion), #keyPath(InstalledApp.storeBuildVersion),
-                                             #keyPath(InstalledApp.storeApp.isPledgeRequired), #keyPath(InstalledApp.storeApp.isPledged))
+        let predicate = NSPredicate(format: predicateFormat,
+                                    #keyPath(InstalledApp.isActive), #keyPath(InstalledApp.storeApp), #keyPath(InstalledApp.storeApp.latestSupportedVersion),
+                                    #keyPath(InstalledApp.storeApp.latestSupportedVersion.version), #keyPath(InstalledApp.version),
+                                    #keyPath(InstalledApp.storeApp.latestSupportedVersion._buildVersion), #keyPath(InstalledApp.storeBuildVersion),
+                                    #keyPath(InstalledApp.storeApp.latestSupportedVersion._buildVersion), #keyPath(InstalledApp.storeBuildVersion),
+                                    #keyPath(InstalledApp.storeApp.isPledgeRequired), #keyPath(InstalledApp.storeApp.isPledged))
+        
+        #if NOTARIZED
+        // Hide AltStore updates from NOTARIZED builds, since AltStore needs to be updated via PAL.
+        let notAltStorePredicate = NSPredicate(format: "%K != %@", #keyPath(InstalledApp.bundleIdentifier), StoreApp.altstoreAppID)
+        fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [predicate, notAltStorePredicate])
+        #else
+        fetchRequest.predicate = predicate
+        #endif
+        
         return fetchRequest
     }
     
