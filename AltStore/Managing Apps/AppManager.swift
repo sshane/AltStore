@@ -240,6 +240,12 @@ extension AppManager
         DispatchQueue.main.async {
             let activeApps = InstalledApp.fetchActiveApps(in: DatabaseManager.shared.viewContext)
                 .filter { $0.bundleIdentifier != app.bundleIdentifier } // Don't count app towards total if it matches activating app
+                #if NOTARIZED
+                .filter {
+                    // Filter out AltStore for NOTARIZED builds since it doesn't count towards total.
+                    $0.bundleIdentifier != StoreApp.altstoreAppID
+                }
+                #endif
                 .sorted { ($0.name, $0.refreshedDate) < ($1.name, $1.refreshedDate) }
             
             var title: String = NSLocalizedString("Cannot Activate More than 3 Apps", comment: "")

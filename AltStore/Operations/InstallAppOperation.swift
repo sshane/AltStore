@@ -132,7 +132,11 @@ class InstallAppOperation: ResultOperation<InstalledApp>
                 var activeApps = InstalledApp.fetch(fetchRequest, in: backgroundContext)
                 if !activeApps.contains(installedApp)
                 {
+                    #if NOTARIZED
+                    let activeAppsCount = activeApps.filter { $0.bundleIdentifier != StoreApp.altstoreAppID }.map { $0.requiredActiveSlots }.reduce(0, +)
+                    #else
                     let activeAppsCount = activeApps.map { $0.requiredActiveSlots }.reduce(0, +)
+                    #endif
                     
                     let availableActiveApps = max(sideloadedAppsLimit - activeAppsCount, 0)
                     if installedApp.requiredActiveSlots <= availableActiveApps
