@@ -129,7 +129,8 @@ class AuthenticationOperation: ResultOperation<(ALTTeam, ALTCertificate, ALTAppl
                                     switch result
                                     {
                                     case .failure(let error): self.finish(.failure(error))
-                                    case .success:
+                                    case .success(let device):
+                                        UserDefaults.shared.deviceID = device.identifier
                                         self.progress.completedUnitCount += 1
                                         
                                         // Save account/team to disk.
@@ -604,23 +605,54 @@ private extension AuthenticationOperation
     
     func registerCurrentDevice(for team: ALTTeam, session: ALTAppleAPISession, completionHandler: @escaping (Result<ALTDevice, Error>) -> Void)
     {
-        guard let udid = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.deviceID) as? String else {
-            return completionHandler(.failure(OperationError.unknownUDID))
-        }
-        
-        ALTAppleAPI.shared.fetchDevices(for: team, types: [.iphone, .ipad], session: session) { (devices, error) in
+        Task<Void, Never> { @MainActor in
             do
             {
-                let devices = try Result(devices, error).get()
-                
-                if let device = devices.first(where: { $0.identifier == udid })
+                let devices = try await ALTAppleAPI.shared.fetchDevices(for: team, types: [.iphone, .ipad], session: session)
+                if let udid = UserDefaults.shared.deviceID, let device = devices.first(where: { $0.identifier == udid })
                 {
                     completionHandler(.success(device))
+                    return
                 }
-                else
+                
+                while true
                 {
-                    ALTAppleAPI.shared.registerDevice(name: UIDevice.current.name, identifier: udid, type: .iphone, team: team, session: session) { (device, error) in
-                        completionHandler(Result(device, error))
+                    guard let presentingViewController else { throw OperationError.unknownUDID }
+                    
+                    do
+                    {
+                        let udid: String
+                        if let deviceID = UserDefaults.shared.deviceID
+                        {
+                            udid = deviceID
+                        }
+                        else
+                        {
+                            udid = try await AppManager.shared.requestDeviceUDID(presentingViewController: presentingViewController)
+                        }
+                        
+                        do
+                        {
+                            if let device = devices.first(where: { $0.identifier == udid })
+                            {
+                                completionHandler(.success(device))
+                            }
+                            else
+                            {
+                                let device = try await ALTAppleAPI.shared.registerDevice(name: UIDevice.current.name, identifier: udid, type: .iphone, team: team, session: session)
+                                completionHandler(.success(device))
+                            }
+                            
+                            return
+                        }
+                        catch
+                        {
+                            let retryAction = UIAlertAction(title: NSLocalizedString("Try Again", comment: ""), style: .default)
+                            let skipAction = UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel)
+                            
+                            let presentingViewController = self.navigationController.viewControllers.isEmpty ? presentingViewController : self.navigationController
+                            try await presentingViewController.presentConfirmationAlert(title: NSLocalizedString("Unable to Register UDID", comment: ""), message: error.localizedDescription, primaryAction: retryAction, cancelAction: skipAction)
+                        }
                     }
                 }
             }

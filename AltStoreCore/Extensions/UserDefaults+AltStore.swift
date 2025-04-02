@@ -23,6 +23,7 @@ public extension UserDefaults
     @NSManaged var requiresAppGroupMigration: Bool
     
     @NSManaged var preferredServerID: String?
+    @NSManaged var deviceID: String?
     
     @NSManaged var isBackgroundRefreshEnabled: Bool
     @NSManaged var isDebugModeEnabled: Bool

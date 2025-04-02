@@ -33,7 +33,7 @@ class RemoveAppOperation: ResultOperation<InstalledApp>
         }
         
         guard let server = self.context.server, let installedApp = self.context.installedApp else { return self.finish(.failure(OperationError.invalidParameters)) }
-        guard let udid = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.deviceID) as? String else { return self.finish(.failure(OperationError.unknownUDID)) }
+        guard let udid = UserDefaults.shared.deviceID else { return self.finish(.failure(OperationError.unknownUDID)) }
         
         Logger.sideload.notice("Removing app \(self.context.bundleIdentifier, privacy: .public)...")
         

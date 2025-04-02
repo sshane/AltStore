@@ -37,7 +37,7 @@ class DeactivateAppOperation: ResultOperation<InstalledApp>
         }
         
         guard let server = self.context.server else { return self.finish(.failure(OperationError.invalidParameters)) }
-        guard let udid = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.deviceID) as? String else { return self.finish(.failure(OperationError.unknownUDID)) }
+        guard let udid = UserDefaults.shared.deviceID else { return self.finish(.failure(OperationError.unknownUDID)) }
         
         Logger.sideload.notice("Deactivating app \(self.app.bundleIdentifier, privacy: .public)...")
         

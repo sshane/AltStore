@@ -55,6 +55,8 @@ class AppManager: ObservableObject
         return lock
     }()
     
+    private weak var requestUDIDAction: UIAlertAction?
+    
     private init()
     {
         self.operationQueue.name = "com.altstore.AppManager.operationQueue"
@@ -335,6 +337,42 @@ extension AppManager
                 continuation.resume(with: result)
             }
         }
+    }
+    
+    @MainActor
+    func requestDeviceUDID(presentingViewController: UIViewController) async throws -> String
+    {
+        let alertController = UIAlertController(title: NSLocalizedString("Please enter your device's UDID.", comment: ""), message: NSLocalizedString("AltStore requires your UDID in order to prepare apps to run on this device.", comment: ""), preferredStyle: .alert)
+        alertController.addTextField { (textField) in
+            textField.placeholder = "00001234-000ABCDEFGHIJKLM"
+            textField.autocorrectionType = .no
+            textField.autocapitalizationType = .allCharacters
+            textField.keyboardType = .numbersAndPunctuation
+            
+            NotificationCenter.default.addObserver(self, selector: #selector(AppManager.textFieldTextDidChange(_:)), name: UITextField.textDidChangeNotification, object: textField)
+        }
+        
+        let udid = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
+            let submitAction = UIAlertAction(title: NSLocalizedString("Continue", comment: ""), style: .default) { [weak alertController] (action) in
+                let textField = alertController?.textFields?.first
+                
+                let udid = textField?.text ?? ""
+                continuation.resume(returning: udid)
+            }
+            submitAction.isEnabled = false
+            alertController.addAction(submitAction)
+            self.requestUDIDAction = submitAction
+            
+            alertController.addAction(UIAlertAction(title: UIAlertAction.cancel.title, style: UIAlertAction.cancel.style) { (action) in
+                continuation.resume(throwing: CancellationError())
+            })
+            
+            // Show alert on top of presented view controller (if there is one).
+            let presentingViewController = presentingViewController.presentedViewController ?? presentingViewController
+            presentingViewController.present(alertController, animated: true, completion: nil)
+        }
+        
+        return udid
     }
     
     func add(@AsyncManaged _ source: Source, message: String? = NSLocalizedString("Make sure to only add sources that you trust.", comment: ""), presentingViewController: UIViewController) async throws
@@ -2161,5 +2199,16 @@ private extension AppManager
         case .install, .update: self.installationProgress[bundleID] = progress
         case .refresh, .activate, .deactivate, .backup, .restore: self.refreshProgress[bundleID] = progress
         }
+    }
+}
+
+private extension AppManager
+{
+    @objc func textFieldTextDidChange(_ notification: Notification)
+    {
+        guard let textField = notification.object as? UITextField else { return }
+        
+        let text = textField.text ?? ""
+        self.requestUDIDAction?.isEnabled = (text.count == 40) || (text.count == 25 && text.contains("-"))
     }
 }

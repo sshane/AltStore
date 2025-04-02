@@ -77,6 +77,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         UserDefaults.standard.preferredServerID = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.serverID) as? String
         
+        #if !NOTARIZED
+        // Installed with AltServer, so cache UDID from Info.plist.
+        UserDefaults.shared.deviceID = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.deviceID) as? String
+        #endif
+        
         #if DEBUG || BETA
         UserDefaults.standard.isDebugModeEnabled = true
         #endif
