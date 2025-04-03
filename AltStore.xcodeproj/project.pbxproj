@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 55;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -432,6 +432,7 @@
 		D59A6B7F2AA9226C00F61259 /* AppProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59A6B7D2AA9226C00F61259 /* AppProcess.swift */; };
 		D59A6B822AA92D1C00F61259 /* Process+Conveniences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59A6B802AA92D1C00F61259 /* Process+Conveniences.swift */; };
 		D59A6B842AA932F700F61259 /* Logger+AltServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59A6B832AA932F700F61259 /* Logger+AltServer.swift */; };
+		D59AE9F12D9F3B2D0064E176 /* libcorecrypto_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D59AE9F02D9F3B2D0064E176 /* libcorecrypto_static.a */; };
 		D5A0537329B91DB400997551 /* SourceDetailContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A0537229B91DB400997551 /* SourceDetailContentViewController.swift */; };
 		D5A1D2E42AA50EB60066CACC /* JITError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A1D2E32AA50EB60066CACC /* JITError.swift */; };
 		D5A1D2E92AA512940066CACC /* RemoteServiceDiscoveryTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A1D2E82AA512940066CACC /* RemoteServiceDiscoveryTunnel.swift */; };
@@ -541,6 +542,195 @@
 			proxyType = 1;
 			remoteGlobalIDString = BFD247692284B9A500981D42;
 			remoteInfo = AltStore;
+		};
+		D59AEAD62D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4CC0779F152E4D6C00D0C77B;
+			remoteInfo = corecrypto_headers;
+		};
+		D59AEAD82D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4BC68AA11B06C1900098A4AA;
+			remoteInfo = corecrypto_static;
+		};
+		D59AEADA2D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 5DDA38E814DAFE6B006151BE;
+			remoteInfo = corecrypto_dylib;
+		};
+		D59AEADC2D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FFF1A3DD275828F00068DFC6;
+			remoteInfo = corecrypto_test_dylib;
+		};
+		D59AEADE2D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0CEF581D14C0FC34000A93B0;
+			remoteInfo = corecrypto_kext;
+		};
+		D59AEAE02D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 22C6209723E1BBA10002C062;
+			remoteInfo = corecrypto_l4_headers;
+		};
+		D59AEAE22D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 79A743AD14BCF4CA00CCBEFB;
+			remoteInfo = corecrypto_l4_norm;
+		};
+		D59AEAE42D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = B15E8A571D80E15E009E17A9;
+			remoteInfo = corecrypto_rtkitos;
+		};
+		D59AEAE62D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4B34B84A1F54B33300AFCD5D;
+			remoteInfo = corecrypto_rtkitrom;
+		};
+		D59AEAE82D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FF887D3C217FDADB00B02374;
+			remoteInfo = corecrypto_rtkitwifi;
+		};
+		D59AEAEA2D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FF03EAD52941558A00CD2636;
+			remoteInfo = corecrypto_rtkit_slices;
+		};
+		D59AEAEC2D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FFBA2FDB281C687C00C2D724;
+			remoteInfo = corecrypto_rtkit_tests;
+		};
+		D59AEAEE2D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4B4A47321A6835BB00E88587;
+			remoteInfo = corecrypto_seprom;
+		};
+		D59AEAF02D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 48498647175EF49A0090831A;
+			remoteInfo = corecrypto_iboot;
+		};
+		D59AEAF22D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4BFF737C1B3CBA5400A5686E;
+			remoteInfo = corecrypto_efi;
+		};
+		D59AEAF42D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FFCE7B372703B95700C15890;
+			remoteInfo = corecrypto_txm;
+		};
+		D59AEAF62D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FFE7C7F32A17FFB600B6745F;
+			remoteInfo = corecrypto_sptm;
+		};
+		D59AEAF82D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0C28C72C1410018F008A2E7E;
+			remoteInfo = ccdh_gen_gp;
+		};
+		D59AEAFA2D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 5DDA38FD14DB005F006151BE;
+			remoteInfo = cc_fips_test;
+		};
+		D59AEAFC2D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FF954505219B60B200D905B1;
+			remoteInfo = prng_seedctl;
+		};
+		D59AEAFE2D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 5D9A49E9151A56F80003E474;
+			remoteInfo = hmacfiletool;
+		};
+		D59AEB002D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0C75E6CE12E15717009E8E65;
+			remoteInfo = corecrypto_perf;
+		};
+		D59AEB022D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4850041E16027EC60091A2A3;
+			remoteInfo = corecrypto_test;
+		};
+		D59AEB042D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 22A2CAAD28F73DF60056833F;
+			remoteInfo = corecrypto_test_nostdlib;
+		};
+		D59AEB062D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 2C2BA8C61C8E01D00057D8CE;
+			remoteInfo = corecrypto_thermal;
+		};
+		D59AEB082D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 2C72D2F321FB8583003C6C27;
+			remoteInfo = libAccelerateCrypto;
+		};
+		D59AEB0A2D9F58A20064E176 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 2CC3068C21FB8D690076A718;
+			remoteInfo = libAccelerateCrypto_kernel;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1079,6 +1269,8 @@
 		D59A6B7D2AA9226C00F61259 /* AppProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppProcess.swift; sourceTree = "<group>"; };
 		D59A6B802AA92D1C00F61259 /* Process+Conveniences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Process+Conveniences.swift"; sourceTree = "<group>"; };
 		D59A6B832AA932F700F61259 /* Logger+AltServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Logger+AltServer.swift"; sourceTree = "<group>"; };
+		D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = corecrypto.xcodeproj; path = Dependencies/AltSign/Dependencies/corecrypto/corecrypto.xcodeproj; sourceTree = SOURCE_ROOT; };
+		D59AE9F02D9F3B2D0064E176 /* libcorecrypto_static.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libcorecrypto_static.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		D5A0537229B91DB400997551 /* SourceDetailContentViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceDetailContentViewController.swift; sourceTree = "<group>"; };
 		D5A1D2E32AA50EB60066CACC /* JITError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JITError.swift; sourceTree = "<group>"; };
 		D5A1D2E82AA512940066CACC /* RemoteServiceDiscoveryTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteServiceDiscoveryTunnel.swift; sourceTree = "<group>"; };
@@ -1181,6 +1373,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF42345D25102688006D1EB2 /* OpenSSL.xcframework in Frameworks */,
+				D59AE9F12D9F3B2D0064E176 /* libcorecrypto_static.a in Frameworks */,
 				BF42345C251024B0006D1EB2 /* AltSign-Static in Frameworks */,
 				0E33F94B8D78AB969FD309A3 /* Pods_AltStoreCore.framework in Frameworks */,
 			);
@@ -1693,6 +1886,7 @@
 		BF6C8FA8242935CA00125131 /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
+				D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */,
 				BF6C8FA9242935DB00125131 /* MarkdownAttributedString */,
 			);
 			name = Dependencies;
@@ -1930,6 +2124,7 @@
 		BFD247852284BB3300981D42 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D59AE9F02D9F3B2D0064E176 /* libcorecrypto_static.a */,
 				D5F7BA432C7FBB8400DC4CC9 /* libz.tbd */,
 				D537C85A2AA95066009A1E08 /* libcorecrypto.tbd */,
 				D533E8B62727841800A9B5DD /* libAppleArchive.tbd */,
@@ -2330,6 +2525,40 @@
 				D59A6B7D2AA9226C00F61259 /* AppProcess.swift */,
 			);
 			path = Types;
+			sourceTree = "<group>";
+		};
+		D59AEAAE2D9F58A10064E176 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D59AEAD72D9F58A20064E176 /* libcorecrypto.empty.a */,
+				D59AEAD92D9F58A20064E176 /* libcorecrypto_static.a */,
+				D59AEADB2D9F58A20064E176 /* libcorecrypto.dylib */,
+				D59AEADD2D9F58A20064E176 /* libcorecrypto_test.dylib */,
+				D59AEADF2D9F58A20064E176 /* corecrypto.kext */,
+				D59AEAE12D9F58A20064E176 /* libcorecrypto_l4_headers.a */,
+				D59AEAE32D9F58A20064E176 /* libcorecrypto_l4.a */,
+				D59AEAE52D9F58A20064E176 /* libcorecrypto_rtkit.a */,
+				D59AEAE72D9F58A20064E176 /* libcorecrypto_rtkitrom.a */,
+				D59AEAE92D9F58A20064E176 /* libcorecrypto_rtkitwifi.a */,
+				D59AEAEB2D9F58A20064E176 /* libcorecrypto_rtkit_slices.a */,
+				D59AEAED2D9F58A20064E176 /* libcorecrypto_rtkit_tests.a */,
+				D59AEAEF2D9F58A20064E176 /* libcorecrypto_seprom.a */,
+				D59AEAF12D9F58A20064E176 /* libcorecrypto_iboot.a */,
+				D59AEAF32D9F58A20064E176 /* libcorecrypto_efi.a */,
+				D59AEAF52D9F58A20064E176 /* libcorecrypto_txm.a */,
+				D59AEAF72D9F58A20064E176 /* libcorecrypto_sptm.a */,
+				D59AEAF92D9F58A20064E176 /* ccdh_gen_gp */,
+				D59AEAFB2D9F58A20064E176 /* cc_fips_test */,
+				D59AEAFD2D9F58A20064E176 /* prng_seedctl */,
+				D59AEAFF2D9F58A20064E176 /* hmacfiletool */,
+				D59AEB012D9F58A20064E176 /* corecrypto_perf */,
+				D59AEB032D9F58A20064E176 /* corecrypto_test */,
+				D59AEB052D9F58A20064E176 /* corecrypto_test_nostdlib */,
+				D59AEB072D9F58A20064E176 /* corecrypto_thermal */,
+				D59AEB092D9F58A20064E176 /* libAccelerateCrypto.a */,
+				D59AEB0B2D9F58A20064E176 /* libAccelerateCrypto_kernel.a */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		D5BDD9712B1FC8FA001F84DE /* Permissions */ = {
@@ -2763,6 +2992,12 @@
 			);
 			productRefGroup = BFD2476B2284B9A500981D42 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = D59AEAAE2D9F58A10064E176 /* Products */;
+					ProjectRef = D59AE9912D9F3AFD0064E176 /* corecrypto.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				BFD247692284B9A500981D42 /* AltStore */,
@@ -2779,6 +3014,198 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		D59AEAD72D9F58A20064E176 /* libcorecrypto.empty.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto.empty.a;
+			remoteRef = D59AEAD62D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAD92D9F58A20064E176 /* libcorecrypto_static.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_static.a;
+			remoteRef = D59AEAD82D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEADB2D9F58A20064E176 /* libcorecrypto.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.dylib";
+			path = libcorecrypto.dylib;
+			remoteRef = D59AEADA2D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEADD2D9F58A20064E176 /* libcorecrypto_test.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.dylib";
+			path = libcorecrypto_test.dylib;
+			remoteRef = D59AEADC2D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEADF2D9F58A20064E176 /* corecrypto.kext */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = corecrypto.kext;
+			remoteRef = D59AEADE2D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAE12D9F58A20064E176 /* libcorecrypto_l4_headers.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_l4_headers.a;
+			remoteRef = D59AEAE02D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAE32D9F58A20064E176 /* libcorecrypto_l4.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_l4.a;
+			remoteRef = D59AEAE22D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAE52D9F58A20064E176 /* libcorecrypto_rtkit.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_rtkit.a;
+			remoteRef = D59AEAE42D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAE72D9F58A20064E176 /* libcorecrypto_rtkitrom.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_rtkitrom.a;
+			remoteRef = D59AEAE62D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAE92D9F58A20064E176 /* libcorecrypto_rtkitwifi.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_rtkitwifi.a;
+			remoteRef = D59AEAE82D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAEB2D9F58A20064E176 /* libcorecrypto_rtkit_slices.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_rtkit_slices.a;
+			remoteRef = D59AEAEA2D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAED2D9F58A20064E176 /* libcorecrypto_rtkit_tests.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_rtkit_tests.a;
+			remoteRef = D59AEAEC2D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAEF2D9F58A20064E176 /* libcorecrypto_seprom.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_seprom.a;
+			remoteRef = D59AEAEE2D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAF12D9F58A20064E176 /* libcorecrypto_iboot.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_iboot.a;
+			remoteRef = D59AEAF02D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAF32D9F58A20064E176 /* libcorecrypto_efi.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_efi.a;
+			remoteRef = D59AEAF22D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAF52D9F58A20064E176 /* libcorecrypto_txm.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_txm.a;
+			remoteRef = D59AEAF42D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAF72D9F58A20064E176 /* libcorecrypto_sptm.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcorecrypto_sptm.a;
+			remoteRef = D59AEAF62D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAF92D9F58A20064E176 /* ccdh_gen_gp */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = ccdh_gen_gp;
+			remoteRef = D59AEAF82D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAFB2D9F58A20064E176 /* cc_fips_test */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = cc_fips_test;
+			remoteRef = D59AEAFA2D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAFD2D9F58A20064E176 /* prng_seedctl */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = prng_seedctl;
+			remoteRef = D59AEAFC2D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEAFF2D9F58A20064E176 /* hmacfiletool */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = hmacfiletool;
+			remoteRef = D59AEAFE2D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEB012D9F58A20064E176 /* corecrypto_perf */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = corecrypto_perf;
+			remoteRef = D59AEB002D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEB032D9F58A20064E176 /* corecrypto_test */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = corecrypto_test;
+			remoteRef = D59AEB022D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEB052D9F58A20064E176 /* corecrypto_test_nostdlib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = corecrypto_test_nostdlib;
+			remoteRef = D59AEB042D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEB072D9F58A20064E176 /* corecrypto_thermal */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = corecrypto_thermal;
+			remoteRef = D59AEB062D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEB092D9F58A20064E176 /* libAccelerateCrypto.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libAccelerateCrypto.a;
+			remoteRef = D59AEB082D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D59AEB0B2D9F58A20064E176 /* libAccelerateCrypto_kernel.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libAccelerateCrypto_kernel.a;
+			remoteRef = D59AEB0A2D9F58A20064E176 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		BF45868B229872EA00BD7491 /* Resources */ = {
