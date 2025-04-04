@@ -160,6 +160,11 @@ private extension DownloadAppOperation
             // so context.appVersion != nil means downloading from source.
             self.context.appVersion = appVersion
         }
+        else if let installedApp = app as? InstalledApp, let storeBuildVersion = installedApp.storeBuildVersion
+        {
+            // Resigning expired app, so cache existing storeBuildVersion.
+            self.context.storeBuildVersion = storeBuildVersion
+        }
         
         self.downloadIPA(from: sourceURL) { result in
             do
