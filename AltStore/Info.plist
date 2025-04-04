@@ -70,6 +70,16 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
+			<string>AltStore Classic</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>altstore-classic</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
 			<string>AltStore Backup</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
