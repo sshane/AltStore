@@ -25,9 +25,12 @@ public class AppVersion: NSManagedObject, Decodable, Fetchable
     
     @NSManaged public var date: Date
     @NSManaged public var localizedDescription: String?
-    @NSManaged public var downloadURL: URL
     @NSManaged public var size: Int64
     @NSManaged public var sha256: String?
+    
+    @NSManaged public var downloadURL: URL
+    @NSManaged public internal(set) var normalizedDownloadURL: String?
+    @NSManaged public internal(set) var assetURLs: [String: URL]?
     
     @nonobjc public var minOSVersion: OperatingSystemVersion? {
         guard let osVersionString = self._minOSVersion else { return nil }
