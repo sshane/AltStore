@@ -440,6 +440,19 @@ internal extension StoreApp
             latestSupportedVersion = versions.first(where: { $0.isSupported })
         }
         
+        #elseif NOTARIZED
+        
+        let latestSupportedVersion: AppVersion?
+        if self.bundleIdentifier == StoreApp.altstoreAppID
+        {
+            // NOTARIZED builds of AltStore Classic can't update themselves and must be updated via PAL.
+            latestSupportedVersion = nil
+        }
+        else
+        {
+            latestSupportedVersion = versions.first(where: { $0.isSupported })
+        }
+        
         #else
         
         let latestSupportedVersion = versions.first(where: { $0.isSupported })

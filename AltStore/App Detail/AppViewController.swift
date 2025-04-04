@@ -389,8 +389,20 @@ private extension AppViewController
         
         if let installedApp = self.app.installedApp, let latestVersion = self.app.latestAvailableVersion, !installedApp.matches(latestVersion), !self.app.isPledgeRequired || self.app.isPledged
         {
+            #if NOTARIZED
+            
+            // Explicitly set button action to .update if there is an update available, unless it's AltStore itself.
+            if installedApp.bundleIdentifier != StoreApp.altstoreAppID
+            {
+                buttonAction = .update
+            }
+            
+            #else
+            
             // Explicitly set button action to .update if there is an update available, even if it's not supported.
             buttonAction = .update
+            
+            #endif
         }
         
         for button in [self.bannerView.button!, self.navigationBarDownloadButton!]
@@ -535,6 +547,11 @@ extension AppViewController
     
     @IBAction func performAppAction(_ sender: PillButton)
     {
+        #if NOTARIZED
+        // If the app is AltStore itself, do not allow updates or downloads.
+        guard self.app.bundleIdentifier != StoreApp.altstoreAppID else { return }
+        #endif
+        
         if let installedApp = self.app.installedApp
         {
             if let latestVersion = self.app.latestAvailableVersion, !installedApp.matches(latestVersion), !self.app.isPledgeRequired || self.app.isPledged
