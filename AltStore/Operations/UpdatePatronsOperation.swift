@@ -25,8 +25,20 @@ extension UpdatePatronsOperation
     private struct Response: Decodable
     {
         var version: Int
-        var accessToken: String
+        var accessToken: String?
         var refreshID: String
+        
+        private enum CodingKeys: String, CodingKey
+        {
+            case version
+            case refreshID
+            
+            #if MARKETPLACE
+            case accessToken
+            #else
+            case accessToken = "classicAccessToken"
+            #endif
+        }
     }
 }
 
