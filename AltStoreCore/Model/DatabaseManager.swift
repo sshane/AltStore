@@ -150,6 +150,10 @@ public extension DatabaseManager
                 
                 Keychain.shared.reset()
                 
+                #if NOTARIZED
+                UserDefaults.shared.deviceID = nil
+                #endif
+                
                 completionHandler(nil)
             }
             catch
