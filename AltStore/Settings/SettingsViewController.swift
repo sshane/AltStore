@@ -30,6 +30,14 @@ extension SettingsViewController
         case debug
     }
     
+    fileprivate enum AccountRow: Int, CaseIterable
+    {
+        case name
+        case email
+        case udid
+        case type
+    }
+    
     fileprivate enum AppRefreshRow: Int, CaseIterable
     {
         case backgroundRefresh
@@ -70,6 +78,7 @@ class SettingsViewController: UITableViewController
     @IBOutlet private var accountNameLabel: UILabel!
     @IBOutlet private var accountEmailLabel: UILabel!
     @IBOutlet private var accountTypeLabel: UILabel!
+    @IBOutlet private var udidLabel: UILabel!
     
     @IBOutlet private var backgroundRefreshSwitch: UISwitch!
     @IBOutlet private var enforceThreeAppLimitSwitch: UISwitch!
@@ -187,6 +196,17 @@ private extension SettingsViewController
         else
         {
             self.activeTeam = nil
+        }
+        
+        if let udid = UserDefaults.shared.deviceID
+        {
+            self.udidLabel.text = udid
+            self.udidLabel.textColor = .white
+        }
+        else
+        {
+            self.udidLabel.text = NSLocalizedString("Unknown UDID", comment: "")
+            self.udidLabel.textColor = .white.withAlphaComponent(0.5)
         }
         
         self.backgroundRefreshSwitch.isOn = UserDefaults.standard.isBackgroundRefreshEnabled
@@ -551,10 +571,32 @@ extension SettingsViewController
         {
         case _ where isSectionHidden(section): return 0
         case .signIn: return (self.activeTeam == nil) ? 1 : 0
-        case .account: return (self.activeTeam == nil) ? 0 : 3
+        case .account: return (self.activeTeam == nil) ? 0 : 4
         case .appRefresh: return AppRefreshRow.allCases.count
         default: return super.tableView(tableView, numberOfRowsInSection: section.rawValue)
         }
+    }
+    
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat
+    {
+        let section = Section.allCases[indexPath.section]
+        switch section
+        {
+        case .account:
+            let row = AccountRow.allCases[indexPath.row]
+            switch row
+            {
+            #if !NOTARIZED
+            case .udid: return 0.0
+            #endif
+                
+            default: break
+            }
+            
+        default: break
+        }
+        
+        return super.tableView(tableView, heightForRowAt: indexPath)
     }
     
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView?
