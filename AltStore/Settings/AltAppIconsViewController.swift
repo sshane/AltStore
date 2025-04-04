@@ -20,8 +20,6 @@ extension UIApplication
 
 private final class AltIcon: Decodable
 {
-    static let defaultIconName: String = "AppIcon"
-    
     var name: String
     var imageName: String
     
@@ -43,10 +41,17 @@ extension AltAppIconsViewController
 {
     private enum Section: String, CaseIterable, Decodable, CodingKeyRepresentable
     {
+        #if !MARKETPLACE
+        case classic
+        #endif
+        
         case modern
         case gradient
         case recessed
+        
+        #if MARKETPLACE
         case classic
+        #endif
         
         var localizedName: String {
             switch self
@@ -153,7 +158,7 @@ private extension AltAppIconsViewController
             
             cell.contentConfiguration = config
 
-            if UIApplication.shared.alternateIconName == icon.imageName || (UIApplication.shared.alternateIconName == nil && icon.imageName == AltIcon.defaultIconName)
+            if UIApplication.shared.alternateIconName == icon.imageName || (UIApplication.shared.alternateIconName == nil && icon.imageName == InstalledApp.defaultAltStoreIconName)
             {
                 cell.accessories = [.checkmark(options: .init(tintColor: .white))]
             }
@@ -199,7 +204,7 @@ extension AltAppIconsViewController
         collectionView.reloadData()
         
         // If assigning primary icon, pass "nil" as alternate icon name.
-        let imageName = (icon.imageName == "AppIcon") ? nil : icon.imageName
+        let imageName = (icon.imageName == InstalledApp.defaultAltStoreIconName) ? nil : icon.imageName
         UIApplication.shared.setAlternateIconName(imageName) { error in
             if let error
             {

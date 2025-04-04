@@ -13,6 +13,12 @@ import AltSign
 
 extension InstalledApp
 {
+    #if MARKETPLACE
+    public static let defaultAltStoreIconName: String = "AppIcon"
+    #else
+    public static let defaultAltStoreIconName: String = "Original"
+    #endif
+    
     public static var freeAccountActiveAppsLimit: Int {
         if UserDefaults.standard.ignoreActiveAppsLimit
         {
@@ -158,7 +164,7 @@ public extension InstalledApp
             else
             {
                 // Otherwise load default app icon from asset catalog.
-                let image = UIImage(named: "AppIcon")
+                let image = UIImage(named: InstalledApp.defaultAltStoreIconName)
                 completion(.success(image))
             }
             
