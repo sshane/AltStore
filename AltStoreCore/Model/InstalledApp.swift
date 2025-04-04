@@ -215,9 +215,9 @@ public extension InstalledApp
             
             // latestSupportedVersion.version != installedApp.version || latestSupportedVersion.buildVersion != installedApp.storeBuildVersion
             //
-            // We have to also check !(latestSupportedVersion.buildVersion == '' && installedApp.storeBuildVersion == nil)
+            // We have to also check (latestSupportedVersion.buildVersion != '' && installedApp.storeBuildVersion == nil) + !(latestSupportedVersion.buildVersion == '' && installedApp.storeBuildVersion == nil)
             // because latestSupportedVersion.buildVersion stores an empty string for nil, while installedApp.storeBuildVersion uses NULL.
-            "(%K != %K OR (%K != %K AND NOT (%K == '' AND %K == nil)))",
+            "(%K != %K OR (%K != '' AND %K == nil) OR (%K != %K AND NOT (%K == '' AND %K == nil)))",
             
             "AND",
             
@@ -228,6 +228,7 @@ public extension InstalledApp
         let predicate = NSPredicate(format: predicateFormat,
                                     #keyPath(InstalledApp.isActive), #keyPath(InstalledApp.storeApp), #keyPath(InstalledApp.storeApp.latestSupportedVersion),
                                     #keyPath(InstalledApp.storeApp.latestSupportedVersion.version), #keyPath(InstalledApp.version),
+                                    #keyPath(InstalledApp.storeApp.latestSupportedVersion._buildVersion), #keyPath(InstalledApp.storeBuildVersion),
                                     #keyPath(InstalledApp.storeApp.latestSupportedVersion._buildVersion), #keyPath(InstalledApp.storeBuildVersion),
                                     #keyPath(InstalledApp.storeApp.latestSupportedVersion._buildVersion), #keyPath(InstalledApp.storeBuildVersion),
                                     #keyPath(InstalledApp.storeApp.isPledgeRequired), #keyPath(InstalledApp.storeApp.isPledged))
