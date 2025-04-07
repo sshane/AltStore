@@ -124,11 +124,13 @@ public class AppVersion: NSManagedObject, Decodable, Fetchable
             self.downloadURL = downloadURL
             
             self.size = try container.decode(Int64.self, forKey: .size)
-            
             self.sha256 = try container.decodeIfPresent(String.self, forKey: .sha256)?.lowercased()
             
             self._minOSVersion = try container.decodeIfPresent(String.self, forKey: .minOSVersion)
+            
+            #if !MARKETPLACE
             self._maxOSVersion = try container.decodeIfPresent(String.self, forKey: .maxOSVersion)
+            #endif
         }
         catch
         {
