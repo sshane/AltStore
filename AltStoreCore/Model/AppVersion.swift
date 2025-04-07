@@ -105,7 +105,24 @@ public class AppVersion: NSManagedObject, Decodable, Fetchable
                 self.localizedDescription = try container.decodeIfPresent(String.self, forKey: .localizedDescription)
             }
             
-            self.downloadURL = try container.decode(URL.self, forKey: .downloadURL)
+            var downloadURL = try container.decode(URL.self, forKey: .downloadURL)
+            
+            #if MARKETPLACE
+            
+            if downloadURL.lastPathComponent.lowercased() == "manifest.json"
+            {
+                // Special-case providing the ADP's manifest's URL instead of the ADP directory itself.
+                downloadURL.deleteLastPathComponent()
+            }
+            
+            // Remove trailing slash if it exists.
+            let lastComponent = downloadURL.lastPathComponent
+            downloadURL = downloadURL.deletingLastPathComponent().appendingPathComponent(lastComponent)
+            
+            #endif
+            
+            self.downloadURL = downloadURL
+            
             self.size = try container.decode(Int64.self, forKey: .size)
             
             self.sha256 = try container.decodeIfPresent(String.self, forKey: .sha256)?.lowercased()
