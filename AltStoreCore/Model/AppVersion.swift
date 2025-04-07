@@ -67,12 +67,17 @@ public class AppVersion: NSManagedObject, Decodable, Fetchable
         case marketingVersion
         case date
         case localizedDescription
-        case localizedDescriptions = "_localizedDescriptions"
         case downloadURL
         case size
         case sha256
         case minOSVersion
         case maxOSVersion
+        
+        // Localized
+        case localizedDescriptions
+        
+        // Legacy
+        case legacyLocalizedDescriptions = "_localizedDescriptions"
     }
     
     public required init(from decoder: Decoder) throws
@@ -91,7 +96,7 @@ public class AppVersion: NSManagedObject, Decodable, Fetchable
             
             self.date = try container.decode(Date.self, forKey: .date)
             
-            if let localizedDescription = try container.decodeLocalizedValue(String.self, forKey: .localizedDescriptions)
+            if let localizedDescription = try container.decodeLocalizedValue(String.self, forKey: .localizedDescriptions) ?? container.decodeLocalizedValue(String.self, forKey: .legacyLocalizedDescriptions)
             {
                 self.localizedDescription = localizedDescription
             }
