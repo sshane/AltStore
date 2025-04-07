@@ -86,6 +86,7 @@ class SettingsViewController: UITableViewController
     
     @IBOutlet private var mastodonButton: UIButton!
     @IBOutlet private var threadsButton: UIButton!
+    @IBOutlet private var blueskyButton: UIButton!
     @IBOutlet private var twitterButton: UIButton!
     @IBOutlet private var githubButton: UIButton!
     
@@ -165,7 +166,7 @@ class SettingsViewController: UITableViewController
             // We can only configure the contentMode for a button's background image from Interface Builder.
             // This works, but it means buttons don't visually highlight because there's no foreground image.
             // As a workaround, we manually set the foreground image + contentMode here.
-            for button in [self.mastodonButton!, self.threadsButton!, self.twitterButton!, self.githubButton!]
+            for button in [self.mastodonButton!, self.threadsButton!, self.blueskyButton!, self.twitterButton!, self.githubButton!]
             {
                 // Get the assigned image from Interface Builder.
                 let image = button.configuration?.background.image
@@ -516,6 +517,12 @@ private extension SettingsViewController
     @IBAction func followAltStoreThreads()
     {
         self.openThreads(username: "altstoreio")
+    }
+    
+    @IBAction func followAltStoreBluesky()
+    {
+        let url = URL(string: "https://bsky.app/profile/altstore.io")!
+        UIApplication.shared.open(url, options: [:])
     }
     
     @IBAction func followAltStoreTwitter()
