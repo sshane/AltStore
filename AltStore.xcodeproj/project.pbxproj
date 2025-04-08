@@ -4578,7 +4578,7 @@
 				CODE_SIGN_ENTITLEMENTS = AltStore/AltStore.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 40;
 				DEVELOPMENT_TEAM = 6XVY5G3U44;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = AltStore/Info.plist;
@@ -4591,7 +4591,7 @@
 					"$(PROJECT_DIR)/Dependencies/fragmentzip",
 					"$(PROJECT_DIR)/Dependencies/libcurl",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.2b;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-Wl,-ld_classic",
@@ -4617,7 +4617,7 @@
 				CODE_SIGN_ENTITLEMENTS = AltStore/AltStore.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 40;
 				DEVELOPMENT_TEAM = 6XVY5G3U44;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = AltStore/Info.plist;
@@ -4630,7 +4630,7 @@
 					"$(PROJECT_DIR)/Dependencies/fragmentzip",
 					"$(PROJECT_DIR)/Dependencies/libcurl",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.2b;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-Wl,-ld_classic",
