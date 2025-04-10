@@ -40,17 +40,39 @@ class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>
             return
         }
         
-        guard let server = self.context.server, let installedApp = self.context.installedApp else { return self.finish(.failure(OperationError.invalidParameters)) }
-        guard let udid = UserDefaults.shared.deviceID else { return self.finish(.failure(OperationError.unknownUDID)) }
-        
-        Logger.altjit.notice("Enabling JIT for app \(installedApp.bundleIdentifier, privacy: .public)...")
+        guard let installedApp = self.context.installedApp else { return self.finish(.failure(OperationError.invalidParameters)) }
         
         installedApp.managedObjectContext?.perform {
+            let appName = installedApp.name
+            
+            let stikJITURL = URL(string: "stikjit://enable-jit?bundle-id=\(installedApp.resignedBundleIdentifier)")!
+            if UIApplication.shared.canOpenURL(stikJITURL)
+            {
+                Logger.altjit.info("Enabling JIT for app \(installedApp.bundleIdentifier, privacy: .public) via StikJIT...")
+                
+                UIApplication.shared.open(stikJITURL) { success in
+                    if success
+                    {
+                        self.finish(.success(()))
+                    }
+                    else
+                    {
+                        self.finish(.failure(OperationError.openAppFailed(name: appName)))
+                    }
+                }
+                
+                return
+            }
+            
+            Logger.altjit.info("Enabling JIT for app \(installedApp.bundleIdentifier, privacy: .public) via AltJIT...")
+            
+            guard let server = self.context.server else { return self.finish(.failure(OperationError.invalidParameters)) }
+            guard let udid = UserDefaults.shared.deviceID else { return self.finish(.failure(OperationError.unknownUDID)) }
+            
             guard let bundle = Bundle(url: installedApp.fileURL),
                   let processName = bundle.executableURL?.lastPathComponent
             else { return self.finish(.failure(OperationError.invalidApp)) }
             
-            let appName = installedApp.name
             let openAppURL = installedApp.openAppURL
             
             ServerManager.shared.connect(to: server) { result in
