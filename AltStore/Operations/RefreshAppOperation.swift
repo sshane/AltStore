@@ -39,7 +39,7 @@ class RefreshAppOperation: ResultOperation<InstalledApp>
                 throw error
             }
             
-            guard let server = self.context.server, let profiles = self.context.provisioningProfiles else { throw OperationError.invalidParameters }
+            guard let server = self.context.server, let profiles = self.context.provisioningProfiles else { throw OperationError.invalidParameters() }
             
             guard let app = self.context.app else { throw OperationError.appNotFound(name: nil) }
             guard let udid = UserDefaults.shared.deviceID else { throw OperationError.unknownUDID }

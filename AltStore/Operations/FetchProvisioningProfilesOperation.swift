@@ -43,7 +43,7 @@ class FetchProvisioningProfilesOperation: ResultOperation<[String: ALTProvisioni
         guard
             let team = self.context.team,
             let session = self.context.session
-        else { return self.finish(.failure(OperationError.invalidParameters)) }
+        else { return self.finish(.failure(OperationError.invalidParameters())) }
         
         guard let app = self.context.app else { return self.finish(.failure(OperationError.appNotFound(name: nil))) }
         

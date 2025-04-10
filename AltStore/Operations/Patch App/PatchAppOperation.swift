@@ -100,7 +100,7 @@ class PatchAppOperation: ResultOperation<Void>
             return
         }
         
-        guard let resignedApp = self.context.resignedApp else { return self.finish(.failure(OperationError.invalidParameters)) }
+        guard let resignedApp = self.context.resignedApp else { return self.finish(.failure(OperationError.invalidParameters())) }
         
         self.progressHandler?(self.progress, NSLocalizedString("Downloading iOS firmware...", comment: ""))
                 

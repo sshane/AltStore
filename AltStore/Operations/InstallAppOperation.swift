@@ -43,7 +43,7 @@ class InstallAppOperation: ResultOperation<InstalledApp>
             let certificate = self.context.certificate,
             let resignedApp = self.context.resignedApp,
             let connection = self.context.installationConnection
-        else { return self.finish(.failure(OperationError.invalidParameters)) }
+        else { return self.finish(.failure(OperationError.invalidParameters())) }
         
         Logger.sideload.notice("Installing resigned app \(resignedApp.bundleIdentifier, privacy: .public)...")
         

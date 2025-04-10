@@ -61,7 +61,7 @@ class VerifyAppOperation: ResultOperation<Void>
             let appName = self.context.app?.name ?? NSLocalizedString("The app", comment: "")
             self.localizedFailure = String(format: NSLocalizedString("%@ could not be installed.", comment: ""), appName)
             
-            guard let app = self.context.app else { throw OperationError.invalidParameters }
+            guard let app = self.context.app else { throw OperationError.invalidParameters() }
             
             Logger.sideload.notice("Verifying app \(self.context.bundleIdentifier, privacy: .public)...")
             
@@ -132,7 +132,7 @@ private extension VerifyAppOperation
     func verifyPermissions(of app: ALTApplication, @AsyncManaged match appVersion: AppVersion) async throws
     {
         guard self.permissionsMode != .none else { return }
-        guard let storeApp = await $appVersion.app else { throw OperationError.invalidParameters }
+        guard let storeApp = await $appVersion.app else { throw OperationError.invalidParameters() }
         
         // Verify source permissions match first.
         let allPermissions = try await self.verifyPermissions(of: app, match: storeApp)

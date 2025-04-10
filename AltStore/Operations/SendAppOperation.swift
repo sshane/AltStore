@@ -39,7 +39,7 @@ class SendAppOperation: ResultOperation<ServerConnection>
             return
         }
         
-        guard let resignedApp = self.context.resignedApp, let server = self.context.server else { return self.finish(.failure(OperationError.invalidParameters)) }
+        guard let resignedApp = self.context.resignedApp, let server = self.context.server else { return self.finish(.failure(OperationError.invalidParameters())) }
         
         Logger.sideload.notice("Sending app \(self.context.bundleIdentifier, privacy: .public) to AltServer \(server.localizedName ?? "nil", privacy: .public)...")
         

@@ -37,7 +37,7 @@ class RemoveAppBackupOperation: ResultOperation<Void>
             return
         }
         
-        guard let installedApp = self.context.installedApp else { return self.finish(.failure(OperationError.invalidParameters)) }
+        guard let installedApp = self.context.installedApp else { return self.finish(.failure(OperationError.invalidParameters())) }
         
         Logger.sideload.notice("Removing backup for app \(self.context.bundleIdentifier, privacy: .public)...")
         

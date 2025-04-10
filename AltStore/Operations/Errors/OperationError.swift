@@ -50,7 +50,6 @@ extension OperationError
     static let notAuthenticated: OperationError = .init(code: .notAuthenticated)
     static let unknownUDID: OperationError = .init(code: .unknownUDID)
     static let invalidApp: OperationError = .init(code: .invalidApp)
-    static let invalidParameters: OperationError = .init(code: .invalidParameters)
     static let noSources: OperationError = .init(code: .noSources)
     static let missingAppGroup: OperationError = .init(code: .missingAppGroup)
     
@@ -60,6 +59,10 @@ extension OperationError
     
     static func unknown(failureReason: String? = nil, file: String = #fileID, line: UInt = #line) -> OperationError {
         OperationError(code: .unknown, failureReason: failureReason, sourceFile: file, sourceLine: line)
+    }
+    
+    static func invalidParameters(file: String = #fileID, line: UInt = #line) -> OperationError {
+        OperationError(code: .invalidParameters, sourceFile: file, sourceLine: line)
     }
     
     static func appNotFound(name: String?, file: String = #fileID, line: UInt = #line) -> OperationError {

@@ -51,7 +51,7 @@ class BackupAppOperation: ResultOperation<Void>
                 throw error
             }
             
-            guard let installedApp = self.context.installedApp, let context = installedApp.managedObjectContext else { throw OperationError.invalidParameters }
+            guard let installedApp = self.context.installedApp, let context = installedApp.managedObjectContext else { throw OperationError.invalidParameters() }
             context.perform {
                 do
                 {

@@ -40,7 +40,7 @@ class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>
             return
         }
         
-        guard let installedApp = self.context.installedApp else { return self.finish(.failure(OperationError.invalidParameters)) }
+        guard let installedApp = self.context.installedApp else { return self.finish(.failure(OperationError.invalidParameters())) }
         
         installedApp.managedObjectContext?.perform {
             let appName = installedApp.name
@@ -66,7 +66,7 @@ class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>
             
             Logger.altjit.info("Enabling JIT for app \(installedApp.bundleIdentifier, privacy: .public) via AltJIT...")
             
-            guard let server = self.context.server else { return self.finish(.failure(OperationError.invalidParameters)) }
+            guard let server = self.context.server else { return self.finish(.failure(OperationError.invalidParameters())) }
             guard let udid = UserDefaults.shared.deviceID else { return self.finish(.failure(OperationError.unknownUDID)) }
             
             guard let bundle = Bundle(url: installedApp.fileURL),

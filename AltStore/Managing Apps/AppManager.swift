@@ -1368,7 +1368,7 @@ private extension AppManager
                     throw error
                 }
                                 
-                guard let app = context.app, let presentingViewController = context.authenticatedContext.presentingViewController else { throw OperationError.invalidParameters }
+                guard let app = context.app, let presentingViewController = context.authenticatedContext.presentingViewController else { throw OperationError.invalidParameters() }
                 
                 self?.deactivateApps(for: app, presentingViewController: presentingViewController) { result in
                     switch result
@@ -1408,7 +1408,7 @@ private extension AppManager
                     throw error
                 }
                 
-                guard let app = context.app else { throw OperationError.invalidParameters }
+                guard let app = context.app else { throw OperationError.invalidParameters() }
                 
                 guard let isUntetherRequired = app.bundle.infoDictionary?[Bundle.Info.untetherRequired] as? Bool,
                       let minimumiOSVersionString = app.bundle.infoDictionary?[Bundle.Info.untetherMinimumiOSVersion] as? String,

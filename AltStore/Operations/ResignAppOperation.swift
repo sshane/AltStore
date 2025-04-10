@@ -41,7 +41,7 @@ class ResignAppOperation: ResultOperation<ALTApplication>
             let profiles = self.context.provisioningProfiles,
             let team = self.context.team,
             let certificate = self.context.certificate
-        else { return self.finish(.failure(OperationError.invalidParameters)) }
+        else { return self.finish(.failure(OperationError.invalidParameters())) }
         
         Logger.sideload.notice("Resigning app \(self.context.bundleIdentifier, privacy: .public)...")
         

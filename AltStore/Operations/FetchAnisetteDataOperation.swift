@@ -32,7 +32,7 @@ class FetchAnisetteDataOperation: ResultOperation<ALTAnisetteData>
             return
         }
         
-        guard let server = self.context.server else { return self.finish(.failure(OperationError.invalidParameters)) }
+        guard let server = self.context.server else { return self.finish(.failure(OperationError.invalidParameters())) }
         
         Logger.sideload.notice("Fetching anisette data...")
         

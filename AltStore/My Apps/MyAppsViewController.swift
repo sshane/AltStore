@@ -878,7 +878,7 @@ private extension MyAppsViewController
                     throw error
                 }
                 
-                guard let fileURL = context.fileURL else { throw OperationError.invalidParameters }
+                guard let fileURL = context.fileURL else { throw OperationError.invalidParameters() }
                 defer {
                     try? FileManager.default.removeItem(at: fileURL)
                 }
@@ -912,7 +912,7 @@ private extension MyAppsViewController
                     throw error
                 }
                 
-                guard let application = context.application else { throw OperationError.invalidParameters }
+                guard let application = context.application else { throw OperationError.invalidParameters() }
                 
                 DispatchQueue.main.async {
                     self?.removeAppExtensions(from: application) { (result) in
@@ -943,7 +943,7 @@ private extension MyAppsViewController
                     throw error
                 }
                 
-                guard let application = context.application else { throw OperationError.invalidParameters }
+                guard let application = context.application else { throw OperationError.invalidParameters() }
                 
                 let group = AppManager.shared.install(application, presentingViewController: self) { (result) in
                     switch result
