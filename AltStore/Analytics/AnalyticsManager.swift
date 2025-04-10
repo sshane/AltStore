@@ -50,7 +50,7 @@ extension AnalyticsManager
         case updatedApp(InstalledApp)
         case refreshedApp(InstalledApp)
         
-        var name: TelemetrySignalType {
+        var name: String {
             switch self
             {
             case .installedApp: return "installed_app"
@@ -103,7 +103,7 @@ extension AnalyticsManager
     func start()
     {
         let configuration = TelemetryManagerConfiguration(appID: telemetryDeckAppID)
-        TelemetryManager.initialize(with: configuration)
+        TelemetryDeck.initialize(config: configuration)
     }
     
     func trackEvent(_ event: Event)
@@ -112,6 +112,6 @@ extension AnalyticsManager
             properties[item.key.rawValue] = item.value
         }
         
-        TelemetryManager.send(event.name, with: properties)
+        TelemetryDeck.signal(event.name, parameters: properties)
     }
 }
