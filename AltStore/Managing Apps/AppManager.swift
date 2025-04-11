@@ -935,7 +935,12 @@ extension AppManager
         let context = Context()
         context.installedApp = installedApp
         
-        let findServerOperation = self.findServer(context: context) { _ in }
+        var findServerOperation: FindServerOperation? = nil
+        if !UIApplication.shared.canOpenURL(installedApp.stikJITURL)
+        {
+            // StikJIT is not installed, so fall back to discovering servers for AltJIT.
+            findServerOperation = self.findServer(context: context) { _ in }
+        }
         
         let enableJITOperation = EnableJITOperation(context: context)
         enableJITOperation.resultHandler = { (result) in
@@ -950,7 +955,11 @@ extension AppManager
                 completionHandler(.failure(error))
             }
         }
-        enableJITOperation.addDependency(findServerOperation)
+        
+        if let findServerOperation
+        {
+            enableJITOperation.addDependency(findServerOperation)
+        }
         
         self.run([enableJITOperation], context: context, requiresSerialQueue: true)
     }

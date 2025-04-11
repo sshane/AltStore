@@ -45,12 +45,11 @@ class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>
         installedApp.managedObjectContext?.perform {
             let appName = installedApp.name
             
-            let stikJITURL = URL(string: "stikjit://enable-jit?bundle-id=\(installedApp.resignedBundleIdentifier)")!
-            if UIApplication.shared.canOpenURL(stikJITURL)
+            if UIApplication.shared.canOpenURL(installedApp.stikJITURL)
             {
                 Logger.altjit.info("Enabling JIT for app \(installedApp.bundleIdentifier, privacy: .public) via StikJIT...")
                 
-                UIApplication.shared.open(stikJITURL) { success in
+                UIApplication.shared.open(installedApp.stikJITURL) { success in
                     if success
                     {
                         self.finish(.success(()))

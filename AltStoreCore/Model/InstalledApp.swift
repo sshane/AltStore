@@ -356,6 +356,11 @@ public extension InstalledApp
         return openAppURL
     }
     
+    var stikJITURL: URL {
+        let url = URL(string: "stikjit://enable-jit?bundle-id=\(self.resignedBundleIdentifier)")!
+        return url
+    }
+    
     class func openAppURL(for app: AppProtocol) -> URL
     {
         let openAppURL = URL(string: "altstore-" + app.bundleIdentifier + "://")!
