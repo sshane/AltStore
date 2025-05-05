@@ -2158,7 +2158,7 @@ private extension AppManager
             switch operation
             {
             case _ where requiresSerialQueue: fallthrough
-            case is InstallAppOperation, is RefreshAppOperation, is BackupAppOperation, is VerifyAppPledgeOperation:
+            case is InstallAppOperation, is RefreshAppOperation, is BackupAppOperation, is VerifyAppPledgeOperation, is VerifyAppOperation:
                 if let installAltStoreOperation = operation as? InstallAppOperation, installAltStoreOperation.context.bundleIdentifier == StoreApp.altstoreAppID
                 {
                     // Add dependencies on previous serial operations in `context` to ensure re-installing AltStore goes last.
