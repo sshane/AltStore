@@ -78,6 +78,12 @@ class PillButton: UIButton
         }
     }
     
+    var preferredFont: UIFont? {
+        didSet {
+            self.update()
+        }
+    }
+    
     private let progressView = UIProgressView(progressViewStyle: .default)
     
     private lazy var displayLink: CADisplayLink = {
@@ -198,7 +204,7 @@ private extension PillButton
         self.progressView.progressTintColor = self.progressTintColor ?? self.tintColor
         
         // Update font after init because the original titleLabel is replaced.
-        self.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        self.titleLabel?.font = self.preferredFont ?? UIFont.boldSystemFont(ofSize: 14)
         
         switch self.style
         {

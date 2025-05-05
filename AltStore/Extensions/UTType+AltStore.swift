@@ -11,4 +11,5 @@ import UniformTypeIdentifiers
 extension UTType
 {
     static let ipa = UTType(importedAs: "com.apple.itunes.ipa")
+    static let p12 = UTType(filenameExtension: "p12")!
 }

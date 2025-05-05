@@ -534,16 +534,40 @@ private extension AuthenticationOperation
         
         func replaceCertificate(from certificates: [ALTCertificate])
         {
-            guard let certificate = certificates.first(where: { $0.machineName?.starts(with: "AltStore") == true }) ?? certificates.first else { return completionHandler(.failure(AuthenticationError(.noCertificate))) }
-            
-            ALTAppleAPI.shared.revoke(certificate, for: team, session: session) { (success, error) in
-                if let error = error, !success
+            Task<Void, Never> { @MainActor in
+                do
+                {
+                    guard
+                        let certificate = certificates.first(where: { $0.machineName?.starts(with: "AltStore") == true }) ?? certificates.first
+                    else { throw AuthenticationError(.noCertificate) }
+                    
+                    do
+                    {
+                        let certificate = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ALTCertificate, Error>) in
+                            let importCertificateViewController = self.storyboard.instantiateViewController(withIdentifier: "importCertificateViewController") as! ImportCertificateViewController
+                            importCertificateViewController.validCertificates = certificates
+                            importCertificateViewController.completionHandler = { result in
+                                continuation.resume(with: result)
+                            }
+                            
+                            if !self.present(importCertificateViewController)
+                            {
+                                continuation.resume(throwing: AuthenticationError(.noCertificate))
+                            }
+                        }
+                        
+                        completionHandler(.success(certificate))
+                    }
+                    catch is CancellationError
+                    {
+                        // Cancel == revoke existing certificate
+                        try await ALTAppleAPI.shared.revoke(certificate, for: team, session: session)
+                        requestCertificate()
+                    }
+                }
+                catch
                 {
                     completionHandler(.failure(error))
-                }
-                else
-                {
-                    requestCertificate()
                 }
             }
         }
