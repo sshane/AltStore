@@ -13,6 +13,7 @@ import Intents
 import IntentsUI
 
 import AltStoreCore
+import AltSign
 
 extension SettingsViewController
 {
@@ -24,6 +25,7 @@ extension SettingsViewController
         case display
         case appRefresh
         case instructions
+        case codeSigning
         case techyThings
         case credits
         case macDirtyCow
@@ -63,6 +65,11 @@ extension SettingsViewController
         case sendFeedback
         case refreshAttempts
         case responseCaching
+    }
+    
+    fileprivate enum CodeSigningRow: Int, CaseIterable
+    {
+        case exportCertificate
     }
 }
 
@@ -285,6 +292,16 @@ private extension SettingsViewController
         case .instructions:
             break
             
+        case .codeSigning:
+            if isHeader
+            {
+                settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("CODE SIGNING", comment: "")
+            }
+            else
+            {
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Export AltStore‘s signing certificate for use with other apps.", comment: "")
+            }
+            
         case .techyThings:
             if isHeader
             {
@@ -441,6 +458,61 @@ private extension SettingsViewController
         })
         
         self.present(alertController, animated: true)
+    }
+    
+    func exportSigningCertificate()
+    {
+        Task<Void, Never> {
+            do
+            {
+                guard let data = Keychain.shared.signingCertificate else { throw AuthenticationError(.noCertificate) }
+                
+                let password = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
+                    let alertController = UIAlertController(title: NSLocalizedString("Export Signing Certificate", comment: ""), message: NSLocalizedString("Please create a password to secure your signing certificate.", comment: ""), preferredStyle: .alert)
+                    alertController.addTextField { textField in
+                        textField.placeholder = "Password"
+                        textField.autocorrectionType = .no
+                        textField.autocapitalizationType = .none
+                        textField.keyboardType = .default
+                    }
+                    alertController.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel) { _ in
+                        continuation.resume(throwing: CancellationError())
+                    })
+                    alertController.addAction(UIAlertAction(title: NSLocalizedString("Export", comment: ""), style: .default) { [weak alertController] _ in
+                        let textField = alertController?.textFields?.first
+                        
+                        let password = textField?.text ?? ""
+                        continuation.resume(returning: password)
+                    })
+                    
+                    self.present(alertController, animated: true)
+                }
+                
+                guard
+                    let signingCertificate = ALTCertificate(p12Data: data, password: nil),
+                    let encryptedData = signingCertificate.encryptedP12Data(withPassword: password)
+                else { throw OperationError(.unknown(failureReason: NSLocalizedString("The certificate is invalid.", comment: ""))) }
+                
+                let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("AltStoreSigningCertificate.p12")
+                try encryptedData.write(to: fileURL, options: .atomic)
+                
+                let documentPicker = UIDocumentPickerViewController(forExporting: [fileURL], asCopy: false)
+                self.present(documentPicker, animated: true, completion: nil)
+            }
+            catch is CancellationError
+            {
+                // Ignore
+            }
+            catch
+            {
+                await self.presentAlert(title: NSLocalizedString("Unable to Export Certificate", comment: ""), message: error.localizedDescription)
+            }
+            
+            if let selectedIndexPath = self.tableView.indexPathForSelectedRow
+            {
+                self.tableView.deselectRow(at: selectedIndexPath, animated: true)
+            }
+        }
     }
     
     @IBAction func handleDebugModeGesture(_ gestureRecognizer: UISwipeGestureRecognizer)
@@ -618,7 +690,7 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return nil
         case .signIn where self.activeTeam != nil: return nil
         case .account where self.activeTeam == nil: return nil
-        case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .macDirtyCow, .debug:
+        case .signIn, .account, .patreon, .display, .appRefresh, .codeSigning, .techyThings, .credits, .macDirtyCow, .debug:
             let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: "HeaderFooterView") as! SettingsHeaderFooterView
             self.prepare(headerView, for: section, isHeader: true)
             return headerView
@@ -634,7 +706,7 @@ extension SettingsViewController
         {
         case _ where isSectionHidden(section): return nil
         case .signIn where self.activeTeam != nil: return nil
-        case .signIn, .patreon, .display, .appRefresh, .techyThings, .macDirtyCow:
+        case .signIn, .patreon, .display, .appRefresh, .codeSigning, .techyThings, .macDirtyCow:
             let footerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: "HeaderFooterView") as! SettingsHeaderFooterView
             self.prepare(footerView, for: section, isHeader: false)
             return footerView
@@ -651,7 +723,7 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return 1.0
         case .signIn where self.activeTeam != nil: return 1.0
         case .account where self.activeTeam == nil: return 1.0
-        case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .macDirtyCow, .debug:
+        case .signIn, .account, .patreon, .display, .appRefresh, .codeSigning, .techyThings, .credits, .macDirtyCow, .debug:
             let height = self.preferredHeight(for: self.prototypeHeaderFooterView, in: section, isHeader: true)
             return height
             
@@ -667,7 +739,7 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return 1.0
         case .signIn where self.activeTeam != nil: return 1.0
         case .account where self.activeTeam == nil: return 1.0            
-        case .signIn, .patreon, .display, .appRefresh, .techyThings, .macDirtyCow:
+        case .signIn, .patreon, .display, .appRefresh, .codeSigning, .techyThings, .macDirtyCow:
             let height = self.preferredHeight(for: self.prototypeHeaderFooterView, in: section, isHeader: false)
             return height
             
@@ -690,6 +762,13 @@ extension SettingsViewController
             {
             case .backgroundRefresh: break
             case .addToSiri: self.addRefreshAppsShortcut()
+            }
+            
+        case .codeSigning:
+            let row = CodeSigningRow.allCases[indexPath.row]
+            switch row
+            {
+            case .exportCertificate: self.exportSigningCertificate()
             }
             
         case .techyThings:

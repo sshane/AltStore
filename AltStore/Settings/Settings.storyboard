@@ -21,7 +21,7 @@
                         <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <color key="separatorColor" white="1" alpha="0.25" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <stackView key="tableFooterView" opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalCentering" alignment="center" spacing="15" id="48g-cT-stR">
-                            <rect key="frame" x="0.0" y="1408" width="375" height="125"/>
+                            <rect key="frame" x="0.0" y="1499" width="375" height="125"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <subviews>
                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="900" text="Follow AltStore for updates" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="XFa-MY-7cV">
@@ -64,6 +64,7 @@
                                         <button opaque="NO" contentMode="scaleAspectFill" contentHorizontalAlignment="fill" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="KtF-c1-462" userLabel="Bluesky">
                                             <rect key="frame" x="109" y="0.0" width="34.5" height="34.5"/>
                                             <constraints>
+                                                <constraint firstAttribute="width" secondItem="KtF-c1-462" secondAttribute="height" id="8LJ-My-U5g"/>
                                                 <constraint firstAttribute="width" secondItem="KtF-c1-462" secondAttribute="height" id="Ii7-Ll-gJt"/>
                                                 <constraint firstAttribute="width" constant="34.5" id="rhz-Iv-kSv"/>
                                             </constraints>
@@ -104,9 +105,6 @@
                                             </connections>
                                         </button>
                                     </subviews>
-                                    <constraints>
-                                        <constraint firstItem="KtF-c1-462" firstAttribute="width" secondItem="KtF-c1-462" secondAttribute="height" id="8LJ-My-U5g"/>
-                                    </constraints>
                                 </stackView>
                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="900" text="Version 2.0" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5u7-mb-jJj">
                                     <rect key="frame" x="151.5" y="108" width="72.5" height="17"/>
@@ -467,10 +465,42 @@
                                     </tableViewCell>
                                 </cells>
                             </tableViewSection>
+                            <tableViewSection headerTitle="" id="ktn-RW-ecg">
+                                <cells>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="51" id="9YU-hT-7r9" customClass="InsetGroupTableViewCell" customModule="AltStore" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="764" width="375" height="51"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="9YU-hT-7r9" id="9IH-ee-ELr">
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="51"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Export Signing Certificate…" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="stO-oc-dAf">
+                                                    <rect key="frame" x="30" y="15.5" width="226" height="20.5"/>
+                                                    <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
+                                                    <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstItem="stO-oc-dAf" firstAttribute="leading" secondItem="9IH-ee-ELr" secondAttribute="leadingMargin" id="2u2-aq-7Dw"/>
+                                                <constraint firstItem="stO-oc-dAf" firstAttribute="centerY" secondItem="9IH-ee-ELr" secondAttribute="centerY" id="blp-1Q-v53"/>
+                                            </constraints>
+                                        </tableViewCellContentView>
+                                        <color key="backgroundColor" white="1" alpha="0.14999999999999999" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <edgeInsets key="layoutMargins" top="8" left="30" bottom="8" right="30"/>
+                                        <userDefinedRuntimeAttributes>
+                                            <userDefinedRuntimeAttribute type="number" keyPath="style">
+                                                <integer key="value" value="0"/>
+                                            </userDefinedRuntimeAttribute>
+                                            <userDefinedRuntimeAttribute type="boolean" keyPath="isSelectable" value="YES"/>
+                                        </userDefinedRuntimeAttributes>
+                                    </tableViewCell>
+                                </cells>
+                            </tableViewSection>
                             <tableViewSection id="1fc-f1-ALD">
                                 <cells>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="51" id="7Ek-Ls-QVO" customClass="InsetGroupTableViewCell" customModule="AltStore" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="760" width="375" height="51"/>
+                                        <rect key="frame" x="0.0" y="851" width="375" height="51"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="7Ek-Ls-QVO" id="KjD-M3-oNg">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="51"/>
@@ -506,7 +536,7 @@
                                         </connections>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="51" id="hFh-X1-ZAi" customClass="InsetGroupTableViewCell" customModule="AltStore" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="811" width="375" height="51"/>
+                                        <rect key="frame" x="0.0" y="902" width="375" height="51"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="hFh-X1-ZAi" id="nCs-Ro-A6t">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="51"/>
@@ -538,7 +568,7 @@
                             <tableViewSection headerTitle="" id="J90-vn-u2O">
                                 <cells>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="51" id="i4T-2q-jF3" customClass="InsetGroupTableViewCell" customModule="AltStore" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="902" width="375" height="51"/>
+                                        <rect key="frame" x="0.0" y="993" width="375" height="51"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="i4T-2q-jF3" id="VTQ-H4-aCM">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="51"/>
@@ -582,7 +612,7 @@
                                         </userDefinedRuntimeAttributes>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="51" id="oHX-oR-nwJ" customClass="InsetGroupTableViewCell" customModule="AltStore" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="953" width="375" height="51"/>
+                                        <rect key="frame" x="0.0" y="1044" width="375" height="51"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="oHX-oR-nwJ" id="hN4-i5-igu">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="51"/>
@@ -626,7 +656,7 @@
                                         </userDefinedRuntimeAttributes>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="51" id="0MT-ht-Sit" customClass="InsetGroupTableViewCell" customModule="AltStore" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="1004" width="375" height="51"/>
+                                        <rect key="frame" x="0.0" y="1095" width="375" height="51"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="0MT-ht-Sit" id="OZp-WM-5H7">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="51"/>
@@ -670,7 +700,7 @@
                                         </userDefinedRuntimeAttributes>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="51" id="O5R-Al-lGj" customClass="InsetGroupTableViewCell" customModule="AltStore" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="1055" width="375" height="51"/>
+                                        <rect key="frame" x="0.0" y="1146" width="375" height="51"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="O5R-Al-lGj" id="CrG-Mr-xQq">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="51"/>
@@ -710,7 +740,7 @@
                             <tableViewSection headerTitle="" id="2em-H5-kgS">
                                 <cells>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="51" id="n3X-OX-idC" customClass="InsetGroupTableViewCell" customModule="AltStore" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="1146" width="375" height="51"/>
+                                        <rect key="frame" x="0.0" y="1237" width="375" height="51"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="n3X-OX-idC" id="IVp-7k-KdM">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="51"/>
@@ -750,7 +780,7 @@
                             <tableViewSection headerTitle="" id="OMa-EK-hRI">
                                 <cells>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="51" id="FMZ-as-Ljo" customClass="InsetGroupTableViewCell" customModule="AltStore" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="1237" width="375" height="51"/>
+                                        <rect key="frame" x="0.0" y="1328" width="375" height="51"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="FMZ-as-Ljo" id="JzL-Of-A3T">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="51"/>
@@ -783,7 +813,7 @@
                                         </userDefinedRuntimeAttributes>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="51" id="Qca-pU-sJh" customClass="InsetGroupTableViewCell" customModule="AltStore" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="1288" width="375" height="51"/>
+                                        <rect key="frame" x="0.0" y="1379" width="375" height="51"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Qca-pU-sJh" id="QtU-8J-VQN">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="51"/>
@@ -819,7 +849,7 @@
                                         </connections>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="51" id="XW5-Zc-nMH" customClass="InsetGroupTableViewCell" customModule="AltStore" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="1339" width="375" height="51"/>
+                                        <rect key="frame" x="0.0" y="1430" width="375" height="51"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="XW5-Zc-nMH" id="AtM-bL-7pS">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="51"/>
