@@ -346,6 +346,10 @@ private extension SettingsViewController
     {
         switch section
         {
+        case .codeSigning:
+            let isHidden = (DatabaseManager.shared.activeTeam() == nil)
+            return isHidden
+        
         case .macDirtyCow:
             let isHidden = !(UserDefaults.standard.isCowExploitSupported && UserDefaults.standard.isDebugModeEnabled)
             return isHidden
