@@ -185,6 +185,9 @@ extension AppsTimelineProvider: TimelineProvider
                 let fetchRequest = InstalledApp.activeAppsFetchRequest() as! NSFetchRequest<NSDictionary>
                 fetchRequest.resultType = .dictionaryResultType
                 fetchRequest.propertiesToFetch = [#keyPath(InstalledApp.bundleIdentifier)]
+                fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \InstalledApp.expirationDate, ascending: true),
+                                                NSSortDescriptor(keyPath: \InstalledApp.refreshedDate, ascending: false),
+                                                NSSortDescriptor(keyPath: \InstalledApp.name, ascending: true)]
                                 
                 let bundleIDs = try context.fetch(fetchRequest).compactMap { $0[#keyPath(InstalledApp.bundleIdentifier)] as? String }
                     #if NOTARIZED
@@ -238,7 +241,27 @@ extension AppsTimelineProvider: IntentTimelineProvider
     func getTimeline(for intent: Intent, in context: Context, completion: @escaping (Timeline<AppsEntry>) -> Void)
     {
         Task<Void, Never> {
-            if let bundleID = intent.app?.identifier
+            #if NOTARIZED
+            let bundleID: String?
+            if let identifier = intent.app?.identifier
+            {
+                bundleID = identifier
+            }
+            else if #available(iOS 16, *), context.family == .accessoryCircular || context.family == .accessoryInline
+            {
+                // Only default to first expiring app for lock screen widget.
+                let activeBundleIDs = await self.fetchActiveAppBundleIDs() // Sorted by expiration date, soonest first.
+                bundleID = activeBundleIDs.first
+            }
+            else
+            {
+                bundleID = nil
+            }
+            #else
+            let bundleID: String? = intent.app?.identifier
+            #endif
+            
+            if let bundleID
             {
                 let timeline = await self.timeline(for: [bundleID])
                 completion(timeline)
