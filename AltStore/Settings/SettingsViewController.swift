@@ -108,6 +108,7 @@ class SettingsViewController: UITableViewController
         super.init(coder: aDecoder)
         
         NotificationCenter.default.addObserver(self, selector: #selector(SettingsViewController.openPatreonSettings(_:)), name: AppDelegate.openPatreonSettingsDeepLinkNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(SettingsViewController.handleExportCertificateDeepLink(_:)), name: AppDelegate.exportCertificateDeepLinkNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(SettingsViewController.openErrorLog(_:)), name: ToastView.openErrorLogNotification, object: nil)
     }
     
@@ -469,33 +470,7 @@ private extension SettingsViewController
         Task<Void, Never> {
             do
             {
-                guard let data = Keychain.shared.signingCertificate else { throw AuthenticationError(.noCertificate) }
-                
-                let password = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
-                    let alertController = UIAlertController(title: NSLocalizedString("Export Signing Certificate", comment: ""), message: NSLocalizedString("Please create a password to secure your signing certificate.", comment: ""), preferredStyle: .alert)
-                    alertController.addTextField { textField in
-                        textField.placeholder = "Password"
-                        textField.autocorrectionType = .no
-                        textField.autocapitalizationType = .none
-                        textField.keyboardType = .default
-                    }
-                    alertController.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel) { _ in
-                        continuation.resume(throwing: CancellationError())
-                    })
-                    alertController.addAction(UIAlertAction(title: NSLocalizedString("Export", comment: ""), style: .default) { [weak alertController] _ in
-                        let textField = alertController?.textFields?.first
-                        
-                        let password = textField?.text ?? ""
-                        continuation.resume(returning: password)
-                    })
-                    
-                    self.present(alertController, animated: true)
-                }
-                
-                guard
-                    let signingCertificate = ALTCertificate(p12Data: data, password: nil),
-                    let encryptedData = signingCertificate.encryptedP12Data(withPassword: password)
-                else { throw OperationError(.unknown(failureReason: NSLocalizedString("The certificate is invalid.", comment: ""))) }
+                let (encryptedData, _) = try await self._exportSigningCertificate()
                 
                 let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("AltStoreSigningCertificate.p12")
                 try encryptedData.write(to: fileURL, options: .atomic)
@@ -517,6 +492,39 @@ private extension SettingsViewController
                 self.tableView.deselectRow(at: selectedIndexPath, animated: true)
             }
         }
+    }
+    
+    func _exportSigningCertificate() async throws -> (Data, String)
+    {
+        guard let data = Keychain.shared.signingCertificate else { throw AuthenticationError(.noCertificate) }
+        
+        let password = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
+            let alertController = UIAlertController(title: NSLocalizedString("Export Signing Certificate", comment: ""), message: NSLocalizedString("Please create a password to secure your signing certificate.", comment: ""), preferredStyle: .alert)
+            alertController.addTextField { textField in
+                textField.placeholder = "Password"
+                textField.autocorrectionType = .no
+                textField.autocapitalizationType = .none
+                textField.keyboardType = .default
+            }
+            alertController.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel) { _ in
+                continuation.resume(throwing: CancellationError())
+            })
+            alertController.addAction(UIAlertAction(title: NSLocalizedString("Export", comment: ""), style: .default) { [weak alertController] _ in
+                let textField = alertController?.textFields?.first
+                
+                let password = textField?.text ?? ""
+                continuation.resume(returning: password)
+            })
+            
+            self.present(alertController, animated: true)
+        }
+        
+        guard
+            let signingCertificate = ALTCertificate(p12Data: data, password: nil),
+            let encryptedData = signingCertificate.encryptedP12Data(withPassword: password)
+        else { throw OperationError(.unknown(failureReason: NSLocalizedString("The certificate is invalid.", comment: ""))) }
+        
+        return (encryptedData, password)
     }
     
     @IBAction func handleDebugModeGesture(_ gestureRecognizer: UISwipeGestureRecognizer)
@@ -633,6 +641,63 @@ private extension SettingsViewController
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             self.performSegue(withIdentifier: "showErrorLog", sender: nil)
+        }
+    }
+    
+    @objc func handleExportCertificateDeepLink(_ notification: Notification)
+    {
+        // Based on SideStore's SettingsViewController.openExportCertificateConfirm(_:)
+        
+        guard let template = notification.userInfo?[AppDelegate.exportCertificateCallbackTemplateKey] as? String, self.presentedViewController == nil else { return }
+        
+        self.navigationController?.popViewController(animated: false)
+        
+        Task<Void, Never> {
+            do
+            {
+                if #available(iOS 16, *)
+                {
+                    // Wait a small delay before animating scroll to row.
+                    try await Task.sleep(for: .seconds(0.5))
+                }
+                
+                let exportCertificateIndexPath = IndexPath(row: CodeSigningRow.exportCertificate.rawValue, section: Section.codeSigning.rawValue)
+                self.tableView.selectRow(at: exportCertificateIndexPath, animated: true, scrollPosition: .middle)
+                
+                defer {
+                    self.tableView.deselectRow(at: exportCertificateIndexPath, animated: true)
+                }
+                
+                if #available(iOS 16, *)
+                {
+                    try await Task.sleep(for: .seconds(0.3))
+                }
+                
+                let (data, password) = try await self._exportSigningCertificate()
+                
+                var allowedCharacters = CharacterSet.urlQueryAllowed
+                allowedCharacters.remove(charactersIn: ";/?:@&=+$, ")
+                
+                guard let encodedCertificate = data.base64EncodedString().addingPercentEncoding(withAllowedCharacters: allowedCharacters) else {
+                    throw OperationError(.unknown(failureReason: NSLocalizedString("The certificate is invalid.", comment: "")))
+                }
+                
+                var callbackString = template.replacingOccurrences(of: "$(BASE64_CERT)", with: encodedCertificate)
+                callbackString = callbackString.replacingOccurrences(of: "$(PASSWORD)", with: password)
+                
+                if let openURL = URL(string: callbackString)
+                {
+                    await UIApplication.shared.open(openURL, options: [:])
+                }
+            }
+            catch is CancellationError
+            {
+                // Ignore
+            }
+            catch
+            {
+                await self.presentAlert(title: NSLocalizedString("Unable to Export Certificate", comment: ""), message: error.localizedDescription)
+            }
         }
     }
 }

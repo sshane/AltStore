@@ -169,6 +169,14 @@ private extension SceneDelegate
                     NotificationCenter.default.post(name: AppDelegate.viewAppDeepLinkNotification, object: nil, userInfo: [AppDelegate.viewAppDeepLinkStoreAppKey: storeApp])
                 }
                 
+            case "certificate":
+                let queryItems = components.queryItems?.reduce(into: [String: String]()) { $0[$1.name.lowercased()] = $1.value } ?? [:]
+                guard let callbackTemplate = queryItems["callback_template"]?.removingPercentEncoding else { return }
+                
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: AppDelegate.exportCertificateDeepLinkNotification, object: nil, userInfo: [AppDelegate.exportCertificateCallbackTemplateKey: callbackTemplate])
+                }
+                
             default: break
             }
         }

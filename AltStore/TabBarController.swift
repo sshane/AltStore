@@ -40,6 +40,7 @@ class TabBarController: UITabBarController
         NotificationCenter.default.addObserver(self, selector: #selector(TabBarController.openErrorLog(_:)), name: ToastView.openErrorLogNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(TabBarController.openBrowseTab(_:)), name: AppDelegate.searchDeepLinkNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(TabBarController.viewApp(_:)), name: AppDelegate.viewAppDeepLinkNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(TabBarController.exportCertificate(_:)), name: AppDelegate.exportCertificateDeepLinkNotification, object: nil)
     }
     
     override func viewDidLoad() 
@@ -183,5 +184,10 @@ private extension TabBarController
         
         let appViewController = AppViewController.makeAppViewController(app: storeApp)
         self.featuredViewController.navigationController?.pushViewController(appViewController, animated: true)
+    }
+    
+    @objc func exportCertificate(_ notification: Notification)
+    {
+        self.selectedIndex = Tab.settings.rawValue
     }
 }

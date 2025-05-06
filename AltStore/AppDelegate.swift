@@ -26,6 +26,7 @@ extension AppDelegate
     static let addSourceDeepLinkNotification = Notification.Name("com.rileytestut.AltStore.AddSourceDeepLinkNotification")
     static let viewAppDeepLinkNotification = Notification.Name("com.rileytestut.AltStore.ViewAppDeepLinkNotification")
     static let searchDeepLinkNotification = Notification.Name("com.rileytestut.AltStore.SearchDeepLinkNotification")
+    static let exportCertificateDeepLinkNotification = Notification.Name("com.rileytestut.AltStore.ExportCertificateDeepLinkNotification")
     
     static let appBackupDidFinish = Notification.Name("com.rileytestut.AltStore.AppBackupDidFinish")
     
@@ -34,6 +35,7 @@ extension AppDelegate
     static let addSourceDeepLinkURLKey = "sourceURL"
     static let viewAppDeepLinkStoreAppKey = "storeApp"
     static let searchDeepLinkQueryKey = "query"
+    static let exportCertificateCallbackTemplateKey = "callback"
 }
 
 @UIApplicationMain
@@ -250,6 +252,16 @@ private extension AppDelegate
                 
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(name: AppDelegate.addSourceDeepLinkNotification, object: nil, userInfo: [AppDelegate.addSourceDeepLinkURLKey: sourceURL])
+                }
+                
+                return true
+                
+            case "certificate":
+                let queryItems = components.queryItems?.reduce(into: [String: String]()) { $0[$1.name.lowercased()] = $1.value } ?? [:]
+                guard let callbackTemplate = queryItems["callback_template"]?.removingPercentEncoding else { return false }
+                
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: AppDelegate.exportCertificateDeepLinkNotification, object: nil, userInfo: [AppDelegate.exportCertificateCallbackTemplateKey: callbackTemplate])
                 }
                 
                 return true
