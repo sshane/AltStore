@@ -14,7 +14,6 @@ private extension Bundle
     struct ID
     {
         static let mail = "com.apple.mail"
-        static let altXPC = "com.rileytestut.AltXPC"
     }
 }
 
@@ -51,13 +50,6 @@ class AnisetteDataManager: NSObject
     private var anisetteDataCompletionHandlers: [String: (Result<ALTAnisetteData, Error>) -> Void] = [:]
     private var anisetteDataTimers: [String: Timer] = [:]
     
-    private lazy var xpcConnection: NSXPCConnection = {
-        let connection = NSXPCConnection(serviceName: Bundle.ID.altXPC)
-        connection.remoteObjectInterface = NSXPCInterface(with: AltXPCProtocol.self)
-        connection.resume()
-        return connection
-    }()
-    
     private override init()
     {
         super.init()
@@ -75,34 +67,16 @@ class AnisetteDataManager: NSObject
             }
             catch let aosKitError
             {
-                // Fall back to XPC in case SIP is disabled.
-                self.requestAnisetteDataFromXPCService { (result) in
+                // Fall back to Mail plug-in as last resort.
+                self.requestAnisetteDataFromPlugin { (result) in
                     do
                     {
                         let anisetteData = try result.get()
                         completion(.success(anisetteData))
                     }
-                    catch CocoaError.xpcConnectionInterrupted
-                    {
-                        // SIP and/or AMFI are not disabled, so fall back to Mail plug-in as last resort.
-                        self.requestAnisetteDataFromPlugin { (result) in
-                            do
-                            {
-                                let anisetteData = try result.get()
-                                completion(.success(anisetteData))
-                            }
-                            catch
-                            {
-                                Logger.main.error("Failed to fetch anisette data via Mail plug-in. \(error.localizedDescription, privacy: .public)")
-                                
-                                // Return original error.
-                                completion(.failure(aosKitError))
-                            }
-                        }
-                    }
                     catch
                     {
-                        Logger.main.error("Failed to fetch anisette data via XPC service. \(error.localizedDescription, privacy: .public)")
+                        Logger.main.error("Failed to fetch anisette data via Mail plug-in. \(error.localizedDescription, privacy: .public)")
                         
                         // Return original error.
                         completion(.failure(aosKitError))
@@ -179,19 +153,6 @@ private extension AnisetteDataManager
         catch
         {
             completion(.failure(error))
-        }
-    }
-    
-    func requestAnisetteDataFromXPCService(completion: @escaping (Result<ALTAnisetteData, Error>) -> Void)
-    {
-        guard let proxy = self.xpcConnection.remoteObjectProxyWithErrorHandler({ (error) in
-            print("Anisette XPC Error:", error)
-            completion(.failure(error))
-        }) as? AltXPCProtocol else { return }
-        
-        proxy.requestAnisetteData { (anisetteData, error) in
-            anisetteData?.sanitize(byReplacingBundleID: Bundle.ID.altXPC)
-            completion(Result(anisetteData, error))
         }
     }
     
