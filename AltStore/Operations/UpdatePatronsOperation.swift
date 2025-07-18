@@ -42,7 +42,7 @@ extension UpdatePatronsOperation
     }
 }
 
-class UpdatePatronsOperation: ResultOperation<Void>
+class UpdatePatronsOperation: ResultOperation<Void>, @unchecked Sendable
 {
     let context: NSManagedObjectContext
     

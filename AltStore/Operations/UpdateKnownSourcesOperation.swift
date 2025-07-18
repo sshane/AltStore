@@ -30,7 +30,7 @@ extension UpdateKnownSourcesOperation
     }
 }
 
-class UpdateKnownSourcesOperation: ResultOperation<([KnownSource], [KnownSource])>
+class UpdateKnownSourcesOperation: ResultOperation<([KnownSource], [KnownSource])>, @unchecked Sendable
 {
     private let session: URLSession
     
