@@ -426,6 +426,12 @@ extension NewsViewController
         
         Nuke.loadImage(with: storeApp.iconURL, into: footerView.bannerView.iconImageView) { result in
             footerView.bannerView.iconImageView.isIndicatingActivity = false
+            
+            switch result
+            {
+            case .success: footerView.bannerView.iconImageView.backgroundColor = .clear
+            case .failure: break
+            }
         }
         
         return footerView

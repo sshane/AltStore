@@ -249,9 +249,13 @@ private extension AddSourceViewController
             cell.bannerView.iconImageView.isIndicatingActivity = false
             cell.bannerView.iconImageView.image = image
             
-            if let error = error
+            if let error
             {
-                print("Error loading image:", error)
+                Logger.main.error("Failed to load app icon in source preview: \(error.localizedDescription, privacy: .public)")
+            }
+            else
+            {
+                cell.bannerView.iconImageView.backgroundColor = .clear
             }
         }
         
@@ -287,9 +291,13 @@ private extension AddSourceViewController
             cell.bannerView.iconImageView.isIndicatingActivity = false
             cell.bannerView.iconImageView.image = image
             
-            if let error = error
+            if let error
             {
-                print("Error loading image:", error)
+                Logger.main.error("Failed to load app icon in recommended sources: \(error.localizedDescription, privacy: .public)")
+            }
+            else
+            {
+                cell.bannerView.iconImageView.backgroundColor = .clear
             }
         }
         

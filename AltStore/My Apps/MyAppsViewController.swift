@@ -301,9 +301,13 @@ private extension MyAppsViewController
             cell.bannerView.iconImageView.isIndicatingActivity = false
             cell.bannerView.iconImageView.image = image
             
-            if let error = error
+            if let error
             {
-                print("Error loading image:", error)
+                Logger.main.error("Failed to load update app icon: \(error.localizedDescription, privacy: .public)")
+            }
+            else
+            {
+                cell.bannerView.iconImageView.backgroundColor = .clear
             }
         }
         
@@ -435,6 +439,15 @@ private extension MyAppsViewController
             let cell = cell as! InstalledAppCollectionViewCell
             cell.bannerView.iconImageView.image = image
             cell.bannerView.iconImageView.isIndicatingActivity = false
+            
+            if let error
+            {
+                Logger.main.error("Failed to load active app icon: \(error.localizedDescription, privacy: .public)")
+            }
+            else
+            {
+                cell.bannerView.iconImageView.backgroundColor = .clear
+            }
         }
         
         return dataSource
@@ -520,6 +533,15 @@ private extension MyAppsViewController
             let cell = cell as! InstalledAppCollectionViewCell
             cell.bannerView.iconImageView.image = image
             cell.bannerView.iconImageView.isIndicatingActivity = false
+            
+            if let error
+            {
+                Logger.main.error("Failed to load inactive app icon: \(error.localizedDescription, privacy: .public)")
+            }
+            else
+            {
+                cell.bannerView.iconImageView.backgroundColor = .clear
+            }
         }
         
         return dataSource
