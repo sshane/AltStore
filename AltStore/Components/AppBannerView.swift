@@ -134,6 +134,7 @@ extension AppBannerView
             var name: String
             var developerName: String? = nil
             var isBeta: Bool = false
+            var tintColor: UIColor? = nil
             
             init(app: AppProtocol)
             {
@@ -147,6 +148,8 @@ extension AppBannerView
                     self.name = String(format: NSLocalizedString("%@ beta", comment: ""), app.name)
                     self.isBeta = true
                 }
+                
+                self.tintColor = storeApp.tintColor
             }
         }
         
@@ -155,6 +158,9 @@ extension AppBannerView
         let values = AppValues(app: app)
         self.titleLabel.text = app.name // Don't use values.name since that already includes "beta".
         self.betaBadgeView.isHidden = !values.isBeta
+        
+        self.iconImageView.backgroundColor = values.tintColor
+        self.iconImageView.activityIndicatorView.color = .white
 
         if let developerName = values.developerName
         {
