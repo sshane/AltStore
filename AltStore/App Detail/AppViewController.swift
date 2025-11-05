@@ -139,6 +139,20 @@ class AppViewController: UIViewController
         
         // Start with navigation bar hidden.
         self.hideNavigationBar()
+        
+        if #available(iOS 26, *)
+        {
+            if let downloadButton = self.navigationItem.rightBarButtonItem
+            {
+                downloadButton.style = .prominent
+                downloadButton.tintColor = self.app.tintColor
+            }
+            
+            self.navigationBarDownloadButton.tintColor = .clear
+            
+            self.backButton.isHidden = true
+            self.backButtonContainerView.isHidden = true
+        }
     }
     
     override func viewWillAppear(_ animated: Bool)
@@ -410,7 +424,10 @@ private extension AppViewController
         
         for button in [self.bannerView.button!, self.navigationBarDownloadButton!]
         {
-            button.tintColor = self.app.tintColor
+            if #unavailable(iOS 26)
+            {
+                button.tintColor = self.app.tintColor
+            }
             button.isIndicatingActivity = false
         }
         
@@ -432,7 +449,14 @@ private extension AppViewController
         self.navigationBarAppNameLabel.alpha = 1.0
         self.navigationBarDownloadButton.alpha = 1.0
         
-        self.updateNavigationBarAppearance(isHidden: false)
+        if #available(iOS 26, *)
+        {
+            self.navigationItem.rightBarButtonItem?.isHidden = false
+        }
+        else
+        {
+            self.updateNavigationBarAppearance(isHidden: false)
+        }
         
         if self.traitCollection.userInterfaceStyle == .dark
         {
@@ -455,7 +479,14 @@ private extension AppViewController
         self.navigationBarAppNameLabel.alpha = 0.0
         self.navigationBarDownloadButton.alpha = 0.0
         
-        self.updateNavigationBarAppearance(isHidden: true)
+        if #available(iOS 26, *)
+        {
+            self.navigationItem.rightBarButtonItem?.isHidden = true
+        }
+        else
+        {
+            self.updateNavigationBarAppearance(isHidden: true)
+        }
         
         self._preferredStatusBarStyle = .lightContent
         
