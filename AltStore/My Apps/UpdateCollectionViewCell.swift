@@ -28,6 +28,7 @@ extension UpdateCollectionViewCell
     @IBOutlet var bannerView: AppBannerView!
     @IBOutlet var versionDescriptionTextView: CollapsingTextView!
     
+    @IBOutlet private var stackView: UIStackView!
     @IBOutlet private var blurView: UIVisualEffectView!
     
     private var originalTintColor: UIColor?
@@ -44,6 +45,9 @@ extension UpdateCollectionViewCell
         
         self.blurView.layer.cornerRadius = 20
         self.blurView.layer.masksToBounds = true
+        
+        // Prevent extra space above version description
+        self.stackView.setCustomSpacing(0.0, after: bannerView)
         
         self.update()
     }
