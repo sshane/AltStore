@@ -12,6 +12,8 @@ import AltStoreCore
 import AltSign
 import Roxas
 
+import Minimuxer
+
 @objc(DeactivateAppOperation)
 class DeactivateAppOperation: ResultOperation<InstalledApp>, @unchecked Sendable
 {
@@ -36,57 +38,139 @@ class DeactivateAppOperation: ResultOperation<InstalledApp>, @unchecked Sendable
             return
         }
         
-        guard let server = self.context.server else { return self.finish(.failure(OperationError.invalidParameters())) }
-        guard let udid = UserDefaults.shared.deviceID else { return self.finish(.failure(OperationError.unknownUDID)) }
-        
         Logger.sideload.notice("Deactivating app \(self.app.bundleIdentifier, privacy: .public)...")
         
-        ServerManager.shared.connect(to: server) { (result) in
-            switch result
+        self.app.managedObjectContext?.perform {
+            let appExtensionIdentifiers = self.app.appExtensions.map { $0.resignedBundleIdentifier }
+            let bundleIdentifiers = Set([self.app.resignedBundleIdentifier] + appExtensionIdentifiers)
+
+            Task<Void, Never>
             {
-            case .failure(let error): self.finish(.failure(error))
-            case .success(let connection):
-                Logger.sideload.notice("Sending deactivate app request...")
-                
-                DatabaseManager.shared.persistentContainer.performBackgroundTask { (context) in
-                    let installedApp = context.object(with: self.app.objectID) as! InstalledApp
+                do
+                {
+                    // Prefer minimuxer when the user has imported a pairing file; fall back to AltServer otherwise.
+                    if Keychain.shared.devicePairingFile != nil
+                    {
+                        try self.deactivateOnDevice(bundleIdentifiers: bundleIdentifiers)
+                    }
+                    else if let server = self.context.server
+                    {
+                        guard let udid = UserDefaults.shared.deviceID else { throw OperationError.unknownUDID }
+
+                        try await self.deactivateViaServer(bundleIdentifiers: bundleIdentifiers, server: server, udid: udid)
+                    }
+                    else
+                    {
+                        throw OperationError.serverNotFound
+                    }
                     
-                    let appExtensionProfiles = installedApp.appExtensions.map { $0.resignedBundleIdentifier }
-                    let allIdentifiers = [installedApp.resignedBundleIdentifier] + appExtensionProfiles
-                    
-                    let request = RemoveProvisioningProfilesRequest(udid: udid, bundleIdentifiers: Set(allIdentifiers))
+                    self.progress.completedUnitCount += 1
+                    Logger.sideload.notice("Successfully deactivated app \(self.app.bundleIdentifier, privacy: .public)!")
+
+                    await DatabaseManager.shared.persistentContainer.performBackgroundTask { context in
+                        let installedApp = context.object(with: self.app.objectID) as! InstalledApp
+                        installedApp.isActive = false
+                        self.finish(.success(installedApp))
+                    }
+                }
+                catch
+                {
+                    Logger.sideload.notice("Failed to deactivate \(self.app.bundleIdentifier, privacy: .public). \(error.localizedDescription, privacy: .public)")
+                    self.finish(.failure(error))
+                }
+            }
+        }
+    }
+}
+
+private extension DeactivateAppOperation
+{
+    // Mirrors AltServer's `removeProvisioningProfilesForBundleIdentifiers:`: list profiles
+    // installed on the device, filter by bundle identifier, remove each by UUID.
+    func deactivateOnDevice(bundleIdentifiers: Set<String>) throws
+    {
+        guard Minimuxer.isDeviceReachable() else { throw OperationError.vpnNotConnected() }
+
+        // misagent doesn't expose a remove-by-bundle-ID primitive, so drop installed
+        // profiles into a temp directory and filter to the ones we want to remove.
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let profilesPath: String
+        do
+        {
+            profilesPath = try Minimuxer.dumpProfiles(docsPath: directory.path)
+        }
+        catch
+        {
+            Logger.sideload.error("Failed to list provisioning profiles via minimuxer: \(error.localizedDescription, privacy: .public)")
+            throw (error as NSError).withLocalizedFailure(String(localized: "Failed to deactivate app."))
+        }
+
+        let profilesDirectory = URL(fileURLWithPath: profilesPath)
+        let profileURLs: [URL]
+        do
+        {
+            profileURLs = try FileManager.default.contentsOfDirectory(at: profilesDirectory, includingPropertiesForKeys: nil)
+                .filter { $0.pathExtension.lowercased() == "mobileprovision" }
+        }
+        catch
+        {
+            Logger.sideload.error("Failed to read provisioning profiles directory at \(profilesDirectory.path, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            throw (error as NSError).withLocalizedFailure(String(localized: "Failed to deactivate app."))
+        }
+        let profiles = profileURLs.compactMap { ALTProvisioningProfile(url: $0) }
+
+        for profile in profiles where bundleIdentifiers.contains(profile.bundleIdentifier)
+        {
+            do
+            {
+                try Minimuxer.removeProvisioningProfile(id: profile.uuid.uuidString.lowercased())
+                Logger.sideload.notice("Removed provisioning profile for \(profile.bundleIdentifier, privacy: .public)")
+            }
+            catch
+            {
+                Logger.sideload.error("Failed to remove provisioning profile for \(profile.bundleIdentifier, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                throw (error as NSError).withLocalizedFailure(String(localized: "Failed to deactivate app."))
+            }
+        }
+    }
+
+    func deactivateViaServer(bundleIdentifiers: Set<String>, server: Server, udid: String) async throws
+    {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            ServerManager.shared.connect(to: server) { (result) in
+                switch result
+                {
+                case .failure(let error): continuation.resume(throwing: error)
+                case .success(let connection):
+                    Logger.sideload.notice("Sending deactivate app request...")
+
+                    let request = RemoveProvisioningProfilesRequest(udid: udid, bundleIdentifiers: bundleIdentifiers)
                     connection.send(request) { (result) in
                         switch result
                         {
-                        case .failure(let error): 
+                        case .failure(let error):
                             Logger.sideload.error("Failed to send deactivate app request. \(error.localizedDescription, privacy: .public)")
-                            self.finish(.failure(error))
-                            
+                            continuation.resume(throwing: error)
+
                         case .success:
                             Logger.sideload.debug("Waiting for deactivate app response...")
                             connection.receiveResponse() { (result) in
                                 switch result
                                 {
-                                case .failure(let error): 
+                                case .failure(let error):
                                     Logger.sideload.error("Failed to receive deactivate app response. \(error.localizedDescription, privacy: .public)")
-                                    self.finish(.failure(error))
-                                    
-                                case .success(.error(let response)): 
+                                    continuation.resume(throwing: error)
+
+                                case .success(.error(let response)):
                                     Logger.sideload.error("Failed to deactivate app. \(response.error.localizedDescription, privacy: .public)")
-                                    self.finish(.failure(response.error))
-                                    
-                                case .success(.removeProvisioningProfiles):
-                                    Logger.sideload.notice("Successfully deactivated app \(self.app.bundleIdentifier, privacy: .public)!")
-                                    
-                                    DatabaseManager.shared.persistentContainer.performBackgroundTask { (context) in
-                                        self.progress.completedUnitCount += 1
-                                        
-                                        let installedApp = context.object(with: self.app.objectID) as! InstalledApp
-                                        installedApp.isActive = false
-                                        self.finish(.success(installedApp))
-                                    }
-                                    
-                                case .success: self.finish(.failure(ALTServerError(.unknownResponse)))
+                                    continuation.resume(throwing: response.error)
+
+                                case .success(.removeProvisioningProfiles): continuation.resume()
+
+                                case .success: continuation.resume(throwing: ALTServerError(.unknownResponse))
                                 }
                             }
                         }

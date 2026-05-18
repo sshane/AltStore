@@ -13,6 +13,8 @@ import AltStoreCore
 import AltSign
 import Roxas
 
+import Minimuxer
+
 @objc(InstallAppOperation)
 class InstallAppOperation: ResultOperation<InstalledApp>, @unchecked Sendable
 {
@@ -41,8 +43,7 @@ class InstallAppOperation: ResultOperation<InstalledApp>, @unchecked Sendable
         
         guard
             let certificate = self.context.certificate,
-            let resignedApp = self.context.resignedApp,
-            let connection = self.context.installationConnection
+            let resignedApp = self.context.resignedApp
         else { return self.finish(.failure(OperationError.invalidParameters())) }
         
         Logger.sideload.notice("Installing resigned app \(resignedApp.bundleIdentifier, privacy: .public)...")
@@ -159,34 +160,36 @@ class InstallAppOperation: ResultOperation<InstalledApp>, @unchecked Sendable
             }
             
             let resignedBundleID = installedApp.resignedBundleIdentifier
-            
-            let request = BeginInstallationRequest(activeProfiles: activeProfiles, bundleIdentifier: resignedBundleID)
-            connection.send(request) { (result) in
-                switch result
+
+            Task<Void, Never>
+            {
+                do
                 {
-                case .failure(let error): 
-                    Logger.sideload.notice("Failed to send begin installation request for resigned app \(resignedBundleID, privacy: .public). \(error.localizedDescription, privacy: .public)")
-                    self.finish(.failure(error))
-                    
-                case .success:
-                    Logger.sideload.notice("Sent begin installation request for resigned app \(resignedBundleID, privacy: .public).")
-                    
-                    self.receive(from: connection) { (result) in
-                        switch result
-                        {
-                        case .success:
-                            backgroundContext.perform {
-                                Logger.sideload.notice("Successfully installed resigned app \(resignedBundleID, privacy: .public)!")
-                                
-                                installedApp.refreshedDate = Date()
-                                self.finish(.success(installedApp))
-                            }
-                            
-                        case .failure(let error):
-                            Logger.sideload.notice("Failed to install resigned app \(resignedBundleID, privacy: .public). \(error.localizedDescription, privacy: .public)")
-                            self.finish(.failure(error))
-                        }
+                    // Prefer minimuxer when the user has imported a pairing file; fall back to AltServer otherwise.
+                    if Keychain.shared.devicePairingFile != nil
+                    {
+                        try self.installOnDevice(resignedApp: resignedApp)
                     }
+                    else if let connection = self.context.installationConnection
+                    {
+                        try await self.installViaServer(resignedBundleID: resignedBundleID, activeProfiles: activeProfiles, connection: connection)
+                    }
+                    else
+                    {
+                        throw OperationError.serverNotFound
+                    }
+
+                    Logger.sideload.notice("Successfully installed resigned app \(resignedBundleID, privacy: .public)!")
+
+                    await backgroundContext.perform {
+                        installedApp.refreshedDate = Date()
+                        self.finish(.success(installedApp))
+                    }
+                }
+                catch
+                {
+                    Logger.sideload.notice("Failed to install resigned app \(resignedBundleID, privacy: .public). \(error.localizedDescription, privacy: .public)")
+                    self.finish(.failure(error))
                 }
             }
         }
@@ -217,6 +220,45 @@ class InstallAppOperation: ResultOperation<InstalledApp>, @unchecked Sendable
 
 private extension InstallAppOperation
 {
+    func installOnDevice(resignedApp: ALTApplication) throws
+    {
+        let bundleIdentifier = self.context.bundleIdentifier
+
+        // Use the original bundle identifier to refresh the IPA URL.
+        let app = AnyApp(name: resignedApp.name, bundleIdentifier: bundleIdentifier, url: resignedApp.fileURL, storeApp: nil)
+        let fileURL = InstalledApp.refreshedIPAURL(for: app)
+
+        let ipaData = try Data(contentsOf: fileURL)
+
+        Logger.sideload.notice("Transferring \(bundleIdentifier, privacy: .public) to device...")
+
+        guard Minimuxer.isDeviceReachable() else { throw OperationError.vpnNotConnected() }
+
+        do
+        {
+            try Minimuxer.yeetAppAfc(bundleId: bundleIdentifier, ipaBytes: ipaData)
+        }
+        catch
+        {
+            Logger.sideload.error("AFC transfer failed: \(error.localizedDescription, privacy: .public)")
+            throw (error as NSError).withLocalizedFailure(String(localized: "Failed to transfer app to device."))
+        }
+        self.progress.completedUnitCount += 50
+
+        Logger.sideload.notice("Triggering install for \(bundleIdentifier, privacy: .public)...")
+
+        do
+        {
+            try Minimuxer.installIpa(bundleId: bundleIdentifier)
+        }
+        catch
+        {
+            Logger.sideload.error("Install failed: \(error.localizedDescription, privacy: .public)")
+            throw (error as NSError).withLocalizedFailure(String(localized: "Failed to install app."))
+        }
+        self.progress.completedUnitCount += 50
+    }
+
     func receive(from connection: ServerConnection, completionHandler: @escaping (Result<Void, Error>) -> Void)
     {
         connection.receiveResponse() { (result) in
@@ -250,6 +292,35 @@ private extension InstallAppOperation
             catch
             {
                 completionHandler(.failure(ALTServerError(error)))
+            }
+        }
+    }
+    
+    func installViaServer(resignedBundleID: String, activeProfiles: Set<String>?, connection: ServerConnection) async throws
+    {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            let request = BeginInstallationRequest(activeProfiles: activeProfiles, bundleIdentifier: resignedBundleID)
+            connection.send(request) { (result) in
+                switch result
+                {
+                case .failure(let error):
+                    Logger.sideload.error("Failed to send begin installation request for resigned app \(resignedBundleID, privacy: .public). \(error.localizedDescription, privacy: .public)")
+                    continuation.resume(throwing: error)
+                    
+                case .success:
+                    Logger.sideload.debug("Sent begin installation request for resigned app \(resignedBundleID, privacy: .public).")
+                    
+                    self.receive(from: connection) { (result) in
+                        switch result
+                        {
+                        case .success: continuation.resume()
+                            
+                        case .failure(let error):
+                            Logger.sideload.error("Failed to receive install app response for resigned app \(resignedBundleID, privacy: .public). \(error.localizedDescription, privacy: .public)")
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                }
             }
         }
     }

@@ -41,8 +41,16 @@ extension OperationError
         /* Pledges */
         case pledgeRequired = 1401
         case pledgeInactive = 1402
+
+        /* Remote AltServer */
+        case vpnNotConnected = 1500 // Local VPN is not currently running.
+        case missingPairingFile = 1501 // Pairing file does not exist at expected location.
+        case invalidPairingFile = 1502 // Pairing file failed to decode or is missing required value (UDID / private_key).
+        case anisetteServerNotConfigured = 1503 // User hasn't provided an anisette server URL.
+        case invalidAnisetteResponse = 1504 // Anisette server returned invalid response.
+        case invalidAnisetteServer = 1505 // Provided URL isn't a valid anisette server.
     }
-    
+
     static var cancelled: CancellationError { CancellationError() }
     
     static let unknownResult: OperationError = .init(code: .unknownResult)
@@ -56,7 +64,7 @@ extension OperationError
     static let serverNotFound: OperationError = .init(code: .serverNotFound)
     static let connectionFailed: OperationError = .init(code: .connectionFailed)
     static let connectionDropped: OperationError = .init(code: .connectionDropped)
-    
+
     static func unknown(failureReason: String? = nil, file: String = #fileID, line: UInt = #line) -> OperationError {
         OperationError(code: .unknown, failureReason: failureReason, sourceFile: file, sourceLine: line)
     }
@@ -90,6 +98,30 @@ extension OperationError
     static func pledgeInactive(appName: String, file: String = #fileID, line: UInt = #line) -> OperationError {
         OperationError(code: .pledgeInactive, appName: appName, sourceFile: file, sourceLine: line)
     }
+
+    static func vpnNotConnected(file: String = #fileID, line: UInt = #line) -> OperationError {
+        OperationError(code: .vpnNotConnected, sourceFile: file, sourceLine: line)
+    }
+
+    static func missingPairingFile(file: String = #fileID, line: UInt = #line) -> OperationError {
+        OperationError(code: .missingPairingFile, sourceFile: file, sourceLine: line)
+    }
+
+    static func anisetteServerNotConfigured(file: String = #fileID, line: UInt = #line) -> OperationError {
+        OperationError(code: .anisetteServerNotConfigured, sourceFile: file, sourceLine: line)
+    }
+
+    static func invalidAnisetteResponse(file: String = #fileID, line: UInt = #line) -> OperationError {
+        OperationError(code: .invalidAnisetteResponse, sourceFile: file, sourceLine: line)
+    }
+
+    static func invalidAnisetteServer(file: String = #fileID, line: UInt = #line) -> OperationError {
+        OperationError(code: .invalidAnisetteServer, sourceFile: file, sourceLine: line)
+    }
+
+    static func invalidPairingFile(file: String = #fileID, line: UInt = #line) -> OperationError {
+        OperationError(code: .invalidPairingFile, sourceFile: file, sourceLine: line)
+    }
 }
 
 struct OperationError: ALTLocalizedError
@@ -108,7 +140,7 @@ struct OperationError: ALTLocalizedError
     var requiredAppIDs: Int?
     var availableAppIDs: Int?
     var expirationDate: Date?
-    
+
     var sourceFile: String?
     var sourceLine: UInt?
     
@@ -165,7 +197,7 @@ struct OperationError: ALTLocalizedError
         case .serverNotFound: return NSLocalizedString("AltServer could not be found.", comment: "")
         case .connectionFailed: return NSLocalizedString("A connection to AltServer could not be established.", comment: "")
         case .connectionDropped: return NSLocalizedString("The connection to AltServer was dropped.", comment: "")
-            
+
         case .pledgeRequired:
             let appName = self.appName ?? NSLocalizedString("This app", comment: "")
             return String(format: NSLocalizedString("%@ requires an active pledge in order to be installed.", comment: ""), appName)
@@ -173,6 +205,24 @@ struct OperationError: ALTLocalizedError
         case .pledgeInactive:
             let appName = self.appName ?? NSLocalizedString("this app", comment: "")
             return String(format: NSLocalizedString("Your pledge is no longer active. Please renew it to continue using %@ normally.", comment: ""), appName)
+
+        case .vpnNotConnected:
+            return NSLocalizedString("AltStore couldn’t connect to local VPN.", comment: "")
+
+        case .missingPairingFile:
+            return NSLocalizedString("AltStore couldn’t find your device pairing file.", comment: "")
+
+        case .anisetteServerNotConfigured:
+            return NSLocalizedString("AltStore doesn’t have a remote server configured.", comment: "")
+
+        case .invalidAnisetteResponse:
+            return NSLocalizedString("The remote server returned an invalid response.", comment: "")
+
+        case .invalidAnisetteServer:
+            return NSLocalizedString("The URL doesn’t point to a valid remote server.", comment: "")
+
+        case .invalidPairingFile:
+            return NSLocalizedString("The selected file isn’t a valid pairing file.", comment: "")
         }
     }
     private var _failureReason: String?
@@ -181,6 +231,12 @@ struct OperationError: ALTLocalizedError
         switch self.code
         {
         case .serverNotFound: return NSLocalizedString("Make sure you're on the same Wi-Fi network as a computer running AltServer, or try connecting this device to your computer via USB.", comment: "")
+        case .vpnNotConnected: return NSLocalizedString("Make sure you’re connected to Wi-Fi and a local VPN, then try again.", comment: "")
+        case .missingPairingFile: return NSLocalizedString("Re-import your pairing file in Settings → Remote Server.", comment: "")
+        case .anisetteServerNotConfigured: return NSLocalizedString("Add a server URL in Settings, or remove your pairing file to use AltServer.", comment: "")
+        case .invalidAnisetteResponse: return NSLocalizedString("Try again, or update URL in Settings → Remote Server to point to a different server.", comment: "")
+        case .invalidAnisetteServer: return NSLocalizedString("Make sure the URL points to a valid remote server and try again.", comment: "")
+        case .invalidPairingFile: return NSLocalizedString("Make sure the file’s contents are a complete, valid pairing file for this device.", comment: "")
         case .maximumAppIDLimitReached:
             let baseMessage = NSLocalizedString("Delete sideloaded apps to free up App ID slots.", comment: "")
             guard let appName = self.appName, let requiredAppIDs = self.requiredAppIDs, let availableAppIDs = self.availableAppIDs, let date = self.expirationDate else { return baseMessage }

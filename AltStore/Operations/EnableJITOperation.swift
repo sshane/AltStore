@@ -65,7 +65,7 @@ class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>, @unc
             
             Logger.altjit.info("Enabling JIT for app \(installedApp.bundleIdentifier, privacy: .public) via AltJIT...")
             
-            guard let server = self.context.server else { return self.finish(.failure(OperationError.invalidParameters())) }
+            guard let server = self.context.server else { return self.finish(.failure(OperationError.serverNotFound)) }
             guard let udid = UserDefaults.shared.deviceID else { return self.finish(.failure(OperationError.unknownUDID)) }
             
             guard let bundle = Bundle(url: installedApp.fileURL),

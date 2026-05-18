@@ -982,12 +982,9 @@ extension AppManager
         context.resignedApp = resignedApp
         
         let patchAppOperation = PatchAppOperation(context: context)
-        let sendAppOperation = SendAppOperation(context: context)
         let installOperation = InstallAppOperation(context: context)
         
         let installationProgress = Progress.discreteProgress(totalUnitCount: 100)
-        installationProgress.addChild(sendAppOperation.progress, withPendingUnitCount: 40)
-        installationProgress.addChild(installOperation.progress, withPendingUnitCount: 60)
         
         /* Patch */
         patchAppOperation.resultHandler = { [weak patchAppOperation] (result) in
@@ -999,18 +996,7 @@ extension AppManager
                 patchAppOperation?.progressHandler?(installationProgress, NSLocalizedString("Patching placeholder app...", comment: ""))
             }
         }
-        
-        /* Send */
-        sendAppOperation.resultHandler = { (result) in
-            switch result
-            {
-            case .failure(let error): context.error = error
-            case .success(let installationConnection): context.installationConnection = installationConnection
-            }
-        }
-        sendAppOperation.addDependency(patchAppOperation)
 
-        
         /* Install */
         installOperation.resultHandler = { (result) in
             switch result
@@ -1019,9 +1005,36 @@ extension AppManager
             case .success(let installedApp): completionHandler(.success(installedApp))
             }
         }
-        installOperation.addDependency(sendAppOperation)
-        
-        self.run([patchAppOperation, sendAppOperation, installOperation], context: context.authenticatedContext)
+
+        if Keychain.shared.devicePairingFile == nil
+        {
+            /* Send */
+            let sendAppOperation = SendAppOperation(context: context)
+            sendAppOperation.resultHandler = { (result) in
+                switch result
+                {
+                case .failure(let error): context.error = error
+                case .success(let installationConnection): context.installationConnection = installationConnection
+                }
+            }
+            sendAppOperation.addDependency(patchAppOperation)
+
+            installationProgress.addChild(sendAppOperation.progress, withPendingUnitCount: 40)
+            installationProgress.addChild(installOperation.progress, withPendingUnitCount: 60)
+
+            installOperation.addDependency(sendAppOperation)
+
+            self.run([patchAppOperation, sendAppOperation, installOperation], context: context.authenticatedContext)
+        }
+        else
+        {
+            installationProgress.addChild(installOperation.progress, withPendingUnitCount: 100)
+
+            installOperation.addDependency(patchAppOperation)
+
+            self.run([patchAppOperation, installOperation], context: context.authenticatedContext)
+        }
+
         return patchAppOperation
     }
     
@@ -1509,20 +1522,6 @@ private extension AppManager
         resignAppOperation.addDependency(fetchProvisioningProfilesOperation)
         progress.addChild(resignAppOperation.progress, withPendingUnitCount: 20)
         
-        
-        /* Send */
-        let sendAppOperation = SendAppOperation(context: context)
-        sendAppOperation.resultHandler = { (result) in
-            switch result
-            {
-            case .failure(let error): context.error = error
-            case .success(let installationConnection): context.installationConnection = installationConnection
-            }
-        }
-        sendAppOperation.addDependency(resignAppOperation)
-        progress.addChild(sendAppOperation.progress, withPendingUnitCount: 20)
-        
-        
         /* Install */
         let installOperation = InstallAppOperation(context: context)
         installOperation.resultHandler = { (result) in
@@ -1531,24 +1530,48 @@ private extension AppManager
             case .failure(let error): completionHandler(.failure(error))
             case .success(let installedApp):
                 context.installedApp = installedApp
-                
+
                 if let app = app as? StoreApp, let storeApp = installedApp.managedObjectContext?.object(with: app.objectID) as? StoreApp
                 {
                     installedApp.storeApp = storeApp
                 }
-                
+
                 if let index = UserDefaults.standard.legacySideloadedApps?.firstIndex(of: installedApp.bundleIdentifier)
                 {
                     // No longer a legacy sideloaded app, so remove it from cached list.
                     UserDefaults.standard.legacySideloadedApps?.remove(at: index)
                 }
-                
+
                 completionHandler(.success(installedApp))
             }
         }
-        progress.addChild(installOperation.progress, withPendingUnitCount: 30)
-        installOperation.addDependency(sendAppOperation)
-        
+
+        var sendAppOperation: SendAppOperation?
+
+        if Keychain.shared.devicePairingFile == nil
+        {
+            /* Send */
+            let operation = SendAppOperation(context: context)
+            operation.resultHandler = { (result) in
+                switch result
+                {
+                case .failure(let error): context.error = error
+                case .success(let installationConnection): context.installationConnection = installationConnection
+                }
+            }
+            operation.addDependency(resignAppOperation)
+            progress.addChild(operation.progress, withPendingUnitCount: 20)
+            sendAppOperation = operation
+
+            installOperation.addDependency(operation)
+            progress.addChild(installOperation.progress, withPendingUnitCount: 30)
+        }
+        else
+        {
+            installOperation.addDependency(resignAppOperation)
+            progress.addChild(installOperation.progress, withPendingUnitCount: 50)
+        }
+
         var operations = [verifyPledgeOperation, downloadOperation, verifyOperation, deactivateAppsOperation, patchAppOperation, refreshAnisetteDataOperation, fetchProvisioningProfilesOperation, resignAppOperation, sendAppOperation, installOperation].compactMap { $0 }
         group.add(operations)
         
@@ -2220,5 +2243,117 @@ private extension AppManager
         
         let text = textField.text ?? ""
         self.requestUDIDAction?.isEnabled = (text.count == 40) || (text.count == 25 && text.contains("-"))
+    }
+}
+
+@MainActor
+extension AppManager
+{
+    @discardableResult
+    func updateAnisetteServerURL(presentingViewController: UIViewController) async throws -> URL
+    {
+        var message = String(localized: "Enter the URL of a remote anisette server to sideload apps without AltServer.")
+
+        while true
+        {
+            do
+            {
+                let serverURL = try await self.showAnisetteServerAlert(presentingViewController: presentingViewController, message: message)
+                try await self.validate(anisetteServerURL: serverURL)
+
+                UserDefaults.shared.anisetteServerURL = serverURL
+                Keychain.shared.anisetteADIPB = nil // adi.pb is provisioned against a specific server; clear it so we can re-provision cleanly.
+
+                return serverURL
+            }
+            catch let error as CancellationError
+            {
+                throw error
+            }
+            catch
+            {
+                Logger.main.error("Anisette server validation failed: \(error.localizedDescription, privacy: .public)")
+                message = error.localizedDescription
+            }
+        }
+    }
+
+    private func showAnisetteServerAlert(presentingViewController: UIViewController, message: String) async throws -> URL
+    {
+        let alertController = UIAlertController(title: String(localized: "Remote Server URL"), message: message, preferredStyle: .alert)
+
+        let existingURL = UserDefaults.shared.anisetteServerURL
+
+        try await withCheckedThrowingContinuation { continuation in
+            let saveAction = UIAlertAction(title: String(localized: "Save"), style: .default) { _ in
+                continuation.resume()
+            }
+            saveAction.isEnabled = (existingURL != nil)
+
+            let cancelAction = UIAlertAction(title: UIAlertAction.cancel.title, style: UIAlertAction.cancel.style) { _ in
+                continuation.resume(throwing: CancellationError())
+            }
+
+            alertController.addAction(saveAction)
+            alertController.addAction(cancelAction)
+
+            alertController.addTextField { textField in
+                textField.placeholder = "https://"
+                textField.text = existingURL?.absoluteString
+                textField.textContentType = .URL
+                textField.keyboardType = .URL
+                textField.autocorrectionType = .no
+                textField.enablesReturnKeyAutomatically = true
+
+                textField.addAction(UIAction { [weak saveAction, weak textField] _ in
+                    saveAction?.isEnabled = textField?.text?.contains(".") ?? false
+                }, for: .editingChanged)
+            }
+
+            presentingViewController.present(alertController, animated: true)
+        }
+
+        let textField = alertController.textFields!.first!
+
+        var input = (textField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !(input.hasPrefix("https://") || input.hasPrefix("http://"))
+        {
+            input = "https://\(input)"
+        }
+
+        guard let serverURL = URL(string: input) else { throw OperationError.unknown(failureReason: String(localized: "The provided URL is invalid.")) }
+        return serverURL
+    }
+
+    private func validate(anisetteServerURL url: URL) async throws
+    {
+        let clientInfoURL = url.appending(components: "v3", "client_info")
+
+        var request = URLRequest(url: clientInfoURL)
+        request.timeoutInterval = 30
+
+        let (data, urlResponse) = try await URLSession.shared.data(for: request)
+
+        if let urlResponse = urlResponse as? HTTPURLResponse
+        {
+            // URL points at something that isn't an anisette server.
+            if urlResponse.statusCode == 404
+            {
+                throw OperationError.invalidAnisetteServer()
+            }
+
+            guard urlResponse.statusCode == 200 else { throw URLError(.badServerResponse) }
+        }
+
+        struct Response: Decodable
+        {
+            var clientInfo: String
+            var userAgent: String
+        }
+
+        let decoder = Foundation.JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        _ = try decoder.decode(Response.self, from: data)
     }
 }

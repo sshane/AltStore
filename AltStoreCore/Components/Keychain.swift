@@ -15,29 +15,33 @@ import AltSign
 public struct KeychainItem<Value>
 {
     public let key: String
+    public let synchronizable: Bool
     
     public var wrappedValue: Value? {
         get {
+            let keychain = self.synchronizable ? Keychain.shared.keychain : Keychain.shared.localKeychain
             switch Value.self
             {
-            case is Data.Type: return try? Keychain.shared.keychain.getData(self.key) as? Value
-            case is String.Type: return try? Keychain.shared.keychain.getString(self.key) as? Value
+            case is Data.Type: return try? keychain.getData(self.key) as? Value
+            case is String.Type: return try? keychain.getString(self.key) as? Value
             default: return nil
             }
         }
         set {
+            let keychain = self.synchronizable ? Keychain.shared.keychain : Keychain.shared.localKeychain
             switch Value.self
             {
-            case is Data.Type: Keychain.shared.keychain[data: self.key] = newValue as? Data
-            case is String.Type: Keychain.shared.keychain[self.key] = newValue as? String
+            case is Data.Type: keychain[data: self.key] = newValue as? Data
+            case is String.Type: keychain[self.key] = newValue as? String
             default: break
             }
         }
     }
     
-    public init(key: String)
+    public init(key: String, synchronizable: Bool = true)
     {
         self.key = key
+        self.synchronizable = synchronizable
     }
 }
 
@@ -46,6 +50,7 @@ public class Keychain
     public static let shared = Keychain()
     
     fileprivate let keychain = KeychainAccess.Keychain(service: "com.rileytestut.AltStore").accessibility(.afterFirstUnlock).synchronizable(true)
+    fileprivate let localKeychain = KeychainAccess.Keychain(service: "com.rileytestut.AltStore.Local").accessibility(.afterFirstUnlock).synchronizable(false)
     
     @KeychainItem(key: "appleIDEmailAddress")
     public var appleIDEmailAddress: String?
@@ -77,6 +82,15 @@ public class Keychain
     @KeychainItem(key: "patreonAccountID")
     public var patreonAccountID: String?
     
+    @KeychainItem(key: "anisetteIdentityKey", synchronizable: false)
+    public var anisetteIdentityKey: Data?
+
+    @KeychainItem(key: "anisetteADIPB", synchronizable: false)
+    public var anisetteADIPB: Data?
+
+    @KeychainItem(key: "devicePairingFile", synchronizable: false)
+    public var devicePairingFile: Data?
+
     private init()
     {
     }

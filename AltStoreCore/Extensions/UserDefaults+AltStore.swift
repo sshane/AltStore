@@ -79,6 +79,8 @@ public extension UserDefaults
     
     @NSManaged var permissionCheckingDisabled: Bool
     @NSManaged var responseCachingDisabled: Bool
+
+    @NSManaged var anisetteServerURL: URL?
     
     class func registerDefaults()
     {

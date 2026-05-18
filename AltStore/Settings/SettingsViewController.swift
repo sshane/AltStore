@@ -15,6 +15,8 @@ import IntentsUI
 import AltStoreCore
 import AltSign
 
+import Minimuxer
+
 extension SettingsViewController
 {
     fileprivate enum Section: Int, CaseIterable
@@ -25,6 +27,7 @@ extension SettingsViewController
         case display
         case appRefresh
         case instructions
+        case remoteAltServer
         case codeSigning
         case techyThings
         case credits
@@ -71,6 +74,12 @@ extension SettingsViewController
     {
         case exportCertificate
     }
+    
+    fileprivate enum RemoteAltServerRow: Int, CaseIterable
+    {
+        case serverURL
+        case pairingFile
+    }
 }
 
 class SettingsViewController: UITableViewController
@@ -81,11 +90,15 @@ class SettingsViewController: UITableViewController
     
     private var debugGestureCounter = 0
     private weak var debugGestureTimer: Timer?
+
+    private var _importPairingFileContinuation: CheckedContinuation<URL, Error>?
     
     @IBOutlet private var accountNameLabel: UILabel!
     @IBOutlet private var accountEmailLabel: UILabel!
     @IBOutlet private var accountTypeLabel: UILabel!
     @IBOutlet private var udidLabel: UILabel!
+    @IBOutlet private var pairingFileLabel: UILabel!
+    @IBOutlet private var serverURLLabel: UILabel!
     
     @IBOutlet private var backgroundRefreshSwitch: UISwitch!
     @IBOutlet private var enforceThreeAppLimitSwitch: UISwitch!
@@ -244,6 +257,17 @@ private extension SettingsViewController
         self.enforceThreeAppLimitSwitch.isOn = !UserDefaults.standard.ignoreActiveAppsLimit
         self.disableResponseCachingSwitch.isOn = UserDefaults.standard.responseCachingDisabled
         
+        if Keychain.shared.devicePairingFile == nil
+        {
+            self.pairingFileLabel.text = String(localized: "Import Device Pairing File…")
+        }
+        else
+        {
+            self.pairingFileLabel.text = String(localized: "Reset Device Pairing File…")
+        }
+        
+        self.serverURLLabel.text = UserDefaults.shared.anisetteServerURL?.host ?? String(localized: "None")
+
         if self.isViewLoaded
         {
             self.tableView.reloadData()
@@ -255,6 +279,7 @@ private extension SettingsViewController
         settingsHeaderFooterView.primaryLabel.isHidden = !isHeader
         settingsHeaderFooterView.secondaryLabel.isHidden = isHeader
         settingsHeaderFooterView.button.isHidden = true
+        settingsHeaderFooterView.button.removeTarget(nil, action: nil, for: .allEvents)
         
         settingsHeaderFooterView.layoutMargins.bottom = isHeader ? 0 : 8
         
@@ -319,6 +344,20 @@ private extension SettingsViewController
             else
             {
                 settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Export AltStore‘s signing certificate for use with other apps.", comment: "")
+            }
+            
+        case .remoteAltServer:
+            if isHeader
+            {
+                settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("REMOTE SERVER", comment: "")
+
+                settingsHeaderFooterView.button.setTitle(NSLocalizedString("LEARN MORE", comment: ""), for: .normal)
+                settingsHeaderFooterView.button.addTarget(self, action: #selector(SettingsViewController.openRemoteAltServerLearnMore(_:)), for: .primaryActionTriggered)
+                settingsHeaderFooterView.button.isHidden = false
+            }
+            else
+            {
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Provide a remote server URL and device pairing file to sideload apps without AltServer.", comment: "")
             }
             
         case .techyThings:
@@ -425,6 +464,14 @@ private extension SettingsViewController
         self.present(alertController, animated: true, completion: nil)
     }
     
+    @objc func openRemoteAltServerLearnMore(_ sender: UIButton)
+    {
+        let url = URL(string: "https://altstore.io/altserverless")!
+        let safariViewController = SFSafariViewController(url: url)
+        safariViewController.preferredControlTintColor = .altPrimary
+        self.present(safariViewController, animated: true, completion: nil)
+    }
+
     @IBAction func toggleIsBackgroundRefreshEnabled(_ sender: UISwitch)
     {
         UserDefaults.standard.isBackgroundRefreshEnabled = sender.isOn
@@ -545,6 +592,137 @@ private extension SettingsViewController
         return (encryptedData, password)
     }
     
+    func editAnisetteServerURL()
+    {
+        func promptForServerURL()
+        {
+            Task<Void, Never> {
+                do
+                {
+                    try await AppManager.shared.updateAnisetteServerURL(presentingViewController: self)
+                    self.update()
+                }
+                catch is CancellationError
+                {
+                    // Ignore
+                }
+                catch
+                {
+                    Logger.sideload.error("Unexpected error editing anisette server URL: \(error.localizedDescription, privacy: .public)")
+                }
+            }
+        }
+
+        if UserDefaults.shared.anisetteServerURL == nil
+        {
+            promptForServerURL()
+        }
+        else
+        {
+            let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+
+            alertController.addAction(UIAlertAction(title: String(localized: "Change"), style: .default) { _ in
+                promptForServerURL()
+            })
+            alertController.addAction(UIAlertAction(title: String(localized: "Remove"), style: .destructive) { [weak self] _ in
+                // adi.pb is provisioned against a specific server URL; clear it so we can re-provision cleanly.
+                UserDefaults.shared.anisetteServerURL = nil
+                Keychain.shared.anisetteADIPB = nil
+                self?.update()
+            })
+            alertController.addAction(.cancel)
+
+            alertController.popoverPresentationController?.sourceView = self.tableView
+            let indexPath = IndexPath(row: RemoteAltServerRow.serverURL.rawValue, section: Section.remoteAltServer.rawValue)
+            alertController.popoverPresentationController?.sourceRect = self.tableView.rectForRow(at: indexPath)
+
+            self.present(alertController, animated: true)
+        }
+
+        if let selectedIndexPath = self.tableView.indexPathForSelectedRow
+        {
+            self.tableView.deselectRow(at: selectedIndexPath, animated: true)
+        }
+    }
+
+    func importPairingFile()
+    {
+        Task<Void, Never> {
+            do
+            {
+                let fileURL = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
+                    let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.mobiledevicepairing, .propertyList], asCopy: true)
+                    documentPicker.delegate = self
+                    self.present(documentPicker, animated: true, completion: nil)
+
+                    self._importPairingFileContinuation = continuation
+                }
+
+                let data = try Data(contentsOf: fileURL)
+                
+                struct PairingFile: Decodable
+                {
+                    var UDID: String?
+                    var private_key: Data?
+                }
+                
+                // Check for valid plist with expected value (UDID for lockdown pairing or private_key for RP-pairing)
+                guard let pairingFile = try? PropertyListDecoder().decode(PairingFile.self, from: data),
+                      pairingFile.UDID != nil || pairingFile.private_key != nil
+                else
+                {
+                    Logger.sideload.error("Rejected pairing file at \(fileURL.lastPathComponent, privacy: .public): not a valid plist or missing UDID/private_key.")
+                    throw OperationError.invalidPairingFile()
+                }
+
+                Keychain.shared.devicePairingFile = data
+                self.update()
+
+                let needsRelaunch = Muxer.started
+
+                if needsRelaunch
+                {
+                    // If Minimuxer has been started with a previous pairing file, we're unable to stop it without the user quitting the app
+                    await self.presentAlert(title: NSLocalizedString("Relaunch Required", comment: ""), message: NSLocalizedString("Quit AltStore and reopen it for your new pairing file to take effect.", comment: ""))
+                }
+                else
+                {
+                    await self.presentAlert(title: NSLocalizedString("Pairing File Imported", comment: ""), message: NSLocalizedString("Your device pairing file has been saved.", comment: ""))
+                }
+            }
+            catch is CancellationError
+            {
+                // Ignore
+            }
+            catch
+            {
+                await self.presentAlert(title: NSLocalizedString("Unable to Import Pairing File", comment: ""), message: error.localizedDescription)
+            }
+
+            if let selectedIndexPath = self.tableView.indexPathForSelectedRow
+            {
+                self.tableView.deselectRow(at: selectedIndexPath, animated: true)
+            }
+        }
+    }
+
+    func resetPairingFile()
+    {
+        let alertController = UIAlertController(title: NSLocalizedString("Are you sure you want to reset your pairing file?", comment: ""),
+                                                message: NSLocalizedString("You'll need to import a new pairing file to sideload apps on this device without AltServer.", comment: ""),
+                                                preferredStyle: .actionSheet)
+        alertController.addAction(UIAlertAction(title: UIAlertAction.cancel.title, style: UIAlertAction.cancel.style) { [weak self] _ in
+            self?.tableView.indexPathForSelectedRow.map { self?.tableView.deselectRow(at: $0, animated: true) }
+        })
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("Reset Device Pairing File", comment: ""), style: .destructive) { [weak self] _ in
+            Keychain.shared.devicePairingFile = nil
+            self?.update()
+            self?.tableView.indexPathForSelectedRow.map { self?.tableView.deselectRow(at: $0, animated: true) }
+        })
+
+        self.present(alertController, animated: true)
+    }
+
     @IBAction func handleDebugModeGesture(_ gestureRecognizer: UISwipeGestureRecognizer)
     {
         self.debugGestureCounter += 1
@@ -743,6 +921,7 @@ extension SettingsViewController
         case .signIn: return (self.activeTeam == nil) ? 1 : 0
         case .account: return (self.activeTeam == nil) ? 0 : 4
         case .appRefresh: return AppRefreshRow.allCases.count
+        case .remoteAltServer: return RemoteAltServerRow.allCases.count
         default: return super.tableView(tableView, numberOfRowsInSection: section.rawValue)
         }
     }
@@ -777,7 +956,7 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return nil
         case .signIn where self.activeTeam != nil: return nil
         case .account where self.activeTeam == nil: return nil
-        case .signIn, .account, .patreon, .display, .appRefresh, .codeSigning, .techyThings, .credits, .macDirtyCow, .debug:
+        case .signIn, .account, .patreon, .display, .appRefresh, .codeSigning, .remoteAltServer, .techyThings, .credits, .macDirtyCow, .debug:
             let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: "HeaderFooterView") as! SettingsHeaderFooterView
             self.prepare(headerView, for: section, isHeader: true)
             return headerView
@@ -793,7 +972,7 @@ extension SettingsViewController
         {
         case _ where isSectionHidden(section): return nil
         case .signIn where self.activeTeam != nil: return nil
-        case .signIn, .patreon, .display, .appRefresh, .codeSigning, .techyThings, .macDirtyCow:
+        case .signIn, .patreon, .display, .appRefresh, .codeSigning, .remoteAltServer, .techyThings, .macDirtyCow:
             let footerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: "HeaderFooterView") as! SettingsHeaderFooterView
             self.prepare(footerView, for: section, isHeader: false)
             return footerView
@@ -810,7 +989,7 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return 1.0
         case .signIn where self.activeTeam != nil: return 1.0
         case .account where self.activeTeam == nil: return 1.0
-        case .signIn, .account, .patreon, .display, .appRefresh, .codeSigning, .techyThings, .credits, .macDirtyCow, .debug:
+        case .signIn, .account, .patreon, .display, .appRefresh, .codeSigning, .remoteAltServer, .techyThings, .credits, .macDirtyCow, .debug:
             let height = self.preferredHeight(for: self.prototypeHeaderFooterView, in: section, isHeader: true)
             return height
             
@@ -826,7 +1005,7 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return 1.0
         case .signIn where self.activeTeam != nil: return 1.0
         case .account where self.activeTeam == nil: return 1.0            
-        case .signIn, .patreon, .display, .appRefresh, .codeSigning, .techyThings, .macDirtyCow:
+        case .signIn, .patreon, .display, .appRefresh, .codeSigning, .remoteAltServer, .techyThings, .macDirtyCow:
             let height = self.preferredHeight(for: self.prototypeHeaderFooterView, in: section, isHeader: false)
             return height
             
@@ -856,6 +1035,24 @@ extension SettingsViewController
             switch row
             {
             case .exportCertificate: self.exportSigningCertificate()
+            }
+        
+        case .remoteAltServer:
+            let row = RemoteAltServerRow.allCases[indexPath.row]
+            switch row
+            {
+            case .serverURL:
+                self.editAnisetteServerURL()
+
+            case .pairingFile:
+                if Keychain.shared.devicePairingFile == nil
+                {
+                    self.importPairingFile()
+                }
+                else
+                {
+                    self.resetPairingFile()
+                }
             }
             
         case .techyThings:
@@ -914,6 +1111,23 @@ extension SettingsViewController
             
         case .account, .patreon, .display, .instructions, .macDirtyCow: break
         }
+    }
+}
+
+extension SettingsViewController: UIDocumentPickerDelegate
+{
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL])
+    {
+        guard let fileURL = urls.first else { return }
+
+        self._importPairingFileContinuation?.resume(returning: fileURL)
+        self._importPairingFileContinuation = nil
+    }
+
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController)
+    {
+        self._importPairingFileContinuation?.resume(throwing: CancellationError())
+        self._importPairingFileContinuation = nil
     }
 }
 
