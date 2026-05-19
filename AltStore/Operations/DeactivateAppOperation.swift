@@ -67,11 +67,18 @@ class DeactivateAppOperation: ResultOperation<InstalledApp>, @unchecked Sendable
                     self.progress.completedUnitCount += 1
                     Logger.sideload.notice("Successfully deactivated app \(self.app.bundleIdentifier, privacy: .public)!")
 
-                    await DatabaseManager.shared.persistentContainer.performBackgroundTask { context in
-                        let installedApp = context.object(with: self.app.objectID) as! InstalledApp
-                        installedApp.isActive = false
-                        self.finish(.success(installedApp))
+                    // The 'await' version of performBackgroundTask drops the context before it can be used.
+                    // Sync function is a workaround to match the original pattern.
+                    func finishOnBackgroundContext()
+                    {
+                        DatabaseManager.shared.persistentContainer.performBackgroundTask { context in
+                            let installedApp = context.object(with: self.app.objectID) as! InstalledApp
+                            installedApp.isActive = false
+                            self.finish(.success(installedApp))
+                        }
                     }
+                    
+                    finishOnBackgroundContext()
                 }
                 catch
                 {
