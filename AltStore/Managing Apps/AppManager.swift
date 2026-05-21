@@ -2261,7 +2261,7 @@ extension AppManager
                 let serverURL = try await self.showAnisetteServerAlert(presentingViewController: presentingViewController, message: message)
                 try await self.validate(anisetteServerURL: serverURL)
 
-                UserDefaults.shared.anisetteServerURL = serverURL
+                UserDefaults.shared.preferredAnisetteServerURL = serverURL
                 Keychain.shared.anisetteADIPB = nil // adi.pb is provisioned against a specific server; clear it so we can re-provision cleanly.
 
                 return serverURL
@@ -2282,7 +2282,7 @@ extension AppManager
     {
         let alertController = UIAlertController(title: String(localized: "Remote Server URL"), message: message, preferredStyle: .alert)
 
-        let existingURL = UserDefaults.shared.anisetteServerURL
+        let existingURL = UserDefaults.shared.preferredAnisetteServerURL
 
         try await withCheckedThrowingContinuation { continuation in
             let saveAction = UIAlertAction(title: String(localized: "Save"), style: .default) { _ in

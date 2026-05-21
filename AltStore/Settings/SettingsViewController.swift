@@ -266,7 +266,7 @@ private extension SettingsViewController
             self.pairingFileLabel.text = String(localized: "Reset Device Pairing File…")
         }
         
-        self.serverURLLabel.text = UserDefaults.shared.anisetteServerURL?.host ?? String(localized: "None")
+        self.serverURLLabel.text = UserDefaults.shared.preferredAnisetteServerURL?.host ?? String(localized: "None")
 
         if self.isViewLoaded
         {
@@ -613,7 +613,7 @@ private extension SettingsViewController
             }
         }
 
-        if UserDefaults.shared.anisetteServerURL == nil
+        if UserDefaults.shared.preferredAnisetteServerURL == nil
         {
             promptForServerURL()
         }
@@ -626,7 +626,7 @@ private extension SettingsViewController
             })
             alertController.addAction(UIAlertAction(title: String(localized: "Remove"), style: .destructive) { [weak self] _ in
                 // adi.pb is provisioned against a specific server URL; clear it so we can re-provision cleanly.
-                UserDefaults.shared.anisetteServerURL = nil
+                UserDefaults.shared.preferredAnisetteServerURL = nil
                 Keychain.shared.anisetteADIPB = nil
                 self?.update()
             })

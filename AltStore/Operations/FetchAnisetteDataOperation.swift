@@ -14,8 +14,22 @@ import AltStoreCore
 import AltSign
 import Roxas
 
+private struct AnisetteServer: Decodable
+{
+    public var name: String
+    public var url: URL
+
+    public init(name: String, url: URL)
+    {
+        self.name = name
+        self.url = url
+    }
+}
+
 private extension URL
 {
+    static let anisetteServers = URL(string: "https://cdn.altstore.io/file/altstore/altstore/anisette-servers.json")!
+
     static let appleGSALookup = URL(string: "https://gsa.apple.com/grandslam/GsService2/lookup")!
 }
 
@@ -84,29 +98,8 @@ class FetchAnisetteDataOperation: ResultOperation<ALTAnisetteData>, @unchecked S
 
                 if Keychain.shared.devicePairingFile != nil
                 {
-                    // AltServerless route — requires a user-provided anisette server URL.
-                    let serverURL: URL
-                    if let configured = UserDefaults.shared.anisetteServerURL
-                    {
-                        serverURL = configured
-                    }
-                    else if var presenter = self.context.presentingViewController
-                    {
-                        // Check for a presented view controller in case we're in the authentication flow
-                        if let presentedViewController = await presenter.presentedViewController
-                        {
-                            presenter = presentedViewController
-                        }
-                        
-                        serverURL = try await AppManager.shared.updateAnisetteServerURL(presentingViewController: presenter)
-                    }
-                    else
-                    {
-                        Logger.sideload.error("No anisette server URL configured and no presenter to prompt for one.")
-                        throw OperationError.anisetteServerNotConfigured()
-                    }
-                    
-                    anisetteData = try await self.fetchAnisetteData(from: serverURL)
+                    // AltServerless route
+                    anisetteData = try await self.fetchAnisetteDataFromAvailableServer()
                 }
                 else if let server = self.context.server
                 {
@@ -180,6 +173,52 @@ private extension FetchAnisetteDataOperation
                 }
             }
         }
+    }
+    
+    func fetchAnisetteDataFromAvailableServer() async throws -> ALTAnisetteData
+    {
+        // Use preferred URL if it exists.
+        if let preferredURL = UserDefaults.shared.preferredAnisetteServerURL
+        {
+            return try await self.fetchAnisetteData(from: preferredURL)
+        }
+
+        // No preferred URL — fetch the list of available servers.
+        let servers: [AnisetteServer]
+        do
+        {
+            struct Response: Decodable
+            {
+                var servers: [AnisetteServer]
+            }
+
+            let (data, _) = try await self.session.data(from: .anisetteServers)
+            let response = try Foundation.JSONDecoder().decode(Response.self, from: data)
+            servers = response.servers
+        }
+        catch
+        {
+            Logger.sideload.error("Failed to fetch remote anisette server list: \(error.localizedDescription, privacy: .public)")
+            throw OperationError.invalidAnisetteResponse()
+        }
+
+        // Shuffle and try each server. If successful, set preferred URL.
+        for server in servers.shuffled()
+        {
+            do
+            {
+                let anisetteData = try await self.fetchAnisetteData(from: server.url)
+                UserDefaults.shared.preferredAnisetteServerURL = server.url
+                return anisetteData
+            }
+            catch
+            {
+                Logger.sideload.notice("Anisette server \(server.name, privacy: .public) failed: \(error.localizedDescription, privacy: .public). Trying next.")
+            }
+        }
+
+        Logger.sideload.error("All remote anisette servers failed.")
+        throw OperationError.invalidAnisetteResponse()
     }
     
     // Based on SideStore's FetchAnisetteDataOperation: https://github.com/SideStore/SideStore/blob/develop/AltStore/Operations/FetchAnisetteDataOperation.swift
