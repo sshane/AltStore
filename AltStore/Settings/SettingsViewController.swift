@@ -349,7 +349,7 @@ private extension SettingsViewController
         case .remoteAltServer:
             if isHeader
             {
-                settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("REMOTE SERVER", comment: "")
+                settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("REMOTE ALTSERVER", comment: "")
 
                 settingsHeaderFooterView.button.setTitle(NSLocalizedString("LEARN MORE", comment: ""), for: .normal)
                 settingsHeaderFooterView.button.addTarget(self, action: #selector(SettingsViewController.openRemoteAltServerLearnMore(_:)), for: .primaryActionTriggered)
@@ -592,52 +592,10 @@ private extension SettingsViewController
         return (encryptedData, password)
     }
     
-    func editAnisetteServerURL()
+    func chooseAnisetteServer()
     {
-        func promptForServerURL()
-        {
-            Task<Void, Never> {
-                do
-                {
-                    try await AppManager.shared.updateAnisetteServerURL(presentingViewController: self)
-                    self.update()
-                }
-                catch is CancellationError
-                {
-                    // Ignore
-                }
-                catch
-                {
-                    Logger.sideload.error("Unexpected error editing anisette server URL: \(error.localizedDescription, privacy: .public)")
-                }
-            }
-        }
-
-        if UserDefaults.shared.preferredAnisetteServerURL == nil
-        {
-            promptForServerURL()
-        }
-        else
-        {
-            let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-
-            alertController.addAction(UIAlertAction(title: String(localized: "Change"), style: .default) { _ in
-                promptForServerURL()
-            })
-            alertController.addAction(UIAlertAction(title: String(localized: "Remove"), style: .destructive) { [weak self] _ in
-                // adi.pb is provisioned against a specific server URL; clear it so we can re-provision cleanly.
-                UserDefaults.shared.preferredAnisetteServerURL = nil
-                Keychain.shared.anisetteADIPB = nil
-                self?.update()
-            })
-            alertController.addAction(.cancel)
-
-            alertController.popoverPresentationController?.sourceView = self.tableView
-            let indexPath = IndexPath(row: RemoteAltServerRow.serverURL.rawValue, section: Section.remoteAltServer.rawValue)
-            alertController.popoverPresentationController?.sourceRect = self.tableView.rectForRow(at: indexPath)
-
-            self.present(alertController, animated: true)
-        }
+        let hostingController = ChooseAnisetteServerView.makeViewController()
+        self.navigationController?.pushViewController(hostingController, animated: true)
 
         if let selectedIndexPath = self.tableView.indexPathForSelectedRow
         {
@@ -1042,7 +1000,7 @@ extension SettingsViewController
             switch row
             {
             case .serverURL:
-                self.editAnisetteServerURL()
+                self.chooseAnisetteServer()
 
             case .pairingFile:
                 if Keychain.shared.devicePairingFile == nil

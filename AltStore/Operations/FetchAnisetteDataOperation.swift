@@ -14,22 +14,8 @@ import AltStoreCore
 import AltSign
 import Roxas
 
-private struct AnisetteServer: Decodable
-{
-    public var name: String
-    public var url: URL
-
-    public init(name: String, url: URL)
-    {
-        self.name = name
-        self.url = url
-    }
-}
-
 private extension URL
 {
-    static let anisetteServers = URL(string: "https://cdn.altstore.io/file/altstore/altstore/anisette-servers.json")!
-
     static let appleGSALookup = URL(string: "https://gsa.apple.com/grandslam/GsService2/lookup")!
 }
 
@@ -187,14 +173,7 @@ private extension FetchAnisetteDataOperation
         let servers: [AnisetteServer]
         do
         {
-            struct Response: Decodable
-            {
-                var servers: [AnisetteServer]
-            }
-
-            let (data, _) = try await self.session.data(from: .anisetteServers)
-            let response = try Foundation.JSONDecoder().decode(Response.self, from: data)
-            servers = response.servers
+            servers = try await AnisetteServer.fetchAvailable(using: self.session)
         }
         catch
         {

@@ -216,7 +216,7 @@ struct OperationError: ALTLocalizedError
             return NSLocalizedString("AltStore doesn’t have a remote server configured.", comment: "")
 
         case .invalidAnisetteResponse:
-            return NSLocalizedString("The remote server returned an invalid response.", comment: "")
+            return NSLocalizedString("The remote server returned an invalid response. Try again, or choose a different server in Settings.", comment: "")
 
         case .invalidAnisetteServer:
             return NSLocalizedString("The URL doesn’t point to a valid remote server.", comment: "")
@@ -234,7 +234,7 @@ struct OperationError: ALTLocalizedError
         case .vpnNotConnected: return NSLocalizedString("Make sure you’re connected to Wi-Fi and a local VPN, then try again.", comment: "")
         case .missingPairingFile: return NSLocalizedString("Re-import your pairing file in Settings → Remote Server.", comment: "")
         case .anisetteServerNotConfigured: return NSLocalizedString("Add a server URL in Settings, or remove your pairing file to use AltServer.", comment: "")
-        case .invalidAnisetteResponse: return NSLocalizedString("Try again, or update URL in Settings → Remote Server to point to a different server.", comment: "")
+        case .invalidAnisetteResponse: return NSLocalizedString("Try again, or select a different server in Settings → Choose Server.", comment: "")
         case .invalidAnisetteServer: return NSLocalizedString("Make sure the URL points to a valid remote server and try again.", comment: "")
         case .invalidPairingFile: return NSLocalizedString("Make sure the file’s contents are a complete, valid pairing file for this device.", comment: "")
         case .maximumAppIDLimitReached:

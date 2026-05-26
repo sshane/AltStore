@@ -485,6 +485,8 @@
 		D5F99A1828D11DB500476A16 /* AltStore10ToAltStore11.xcmappingmodel in Sources */ = {isa = PBXBuildFile; fileRef = D5F99A1728D11DB500476A16 /* AltStore10ToAltStore11.xcmappingmodel */; };
 		D5F99A1A28D12B1400476A16 /* StoreApp10ToStoreApp11Policy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F99A1928D12B1400476A16 /* StoreApp10ToStoreApp11Policy.swift */; };
 		D5FB28EC2ADDF68D00A1C337 /* UIFontDescriptor+Bold.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5FB28EB2ADDF68D00A1C337 /* UIFontDescriptor+Bold.swift */; };
+		82AB00022FC0345000567241 /* AnisetteServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82AB00012FC0345000567241 /* AnisetteServer.swift */; };
+		82AB00042FC0345000567241 /* ChooseAnisetteServerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82AB00032FC0345000567241 /* ChooseAnisetteServerView.swift */; };
 		D5FB28EE2ADDF89800A1C337 /* KnownSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5893F812A141E4900E767CD /* KnownSource.swift */; };
 		D5FB7A0E2AA25A4E00EF863D /* Previews.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D5FB7A0D2AA25A4E00EF863D /* Previews.xcassets */; };
 		D5FB7A212AA284ED00EF863D /* EnableJIT.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5FB7A1A2AA284ED00EF863D /* EnableJIT.swift */; };
@@ -1279,6 +1281,8 @@
 		D586D39A28EF58B0000E101F /* AltTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AltTests.swift; sourceTree = "<group>"; };
 		D58916FD28C7C55C00E39C8B /* LoggedError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedError.swift; sourceTree = "<group>"; };
 		D5893F7E2A14183200E767CD /* NSManagedObjectContext+Conveniences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSManagedObjectContext+Conveniences.swift"; sourceTree = "<group>"; };
+		82AB00012FC0345000567241 /* AnisetteServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnisetteServer.swift; sourceTree = "<group>"; };
+		82AB00032FC0345000567241 /* ChooseAnisetteServerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChooseAnisetteServerView.swift; sourceTree = "<group>"; };
 		D5893F812A141E4900E767CD /* KnownSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownSource.swift; sourceTree = "<group>"; };
 		D59162AA29BA60A9005CBF47 /* SourceHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceHeaderView.swift; sourceTree = "<group>"; };
 		D59162AC29BA616A005CBF47 /* SourceHeaderView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SourceHeaderView.xib; sourceTree = "<group>"; };
@@ -2265,6 +2269,7 @@
 			children = (
 				BFE60737231ADF49002B0E8E /* Settings.storyboard */,
 				BFE60739231ADF82002B0E8E /* SettingsViewController.swift */,
+				82AB00032FC0345000567241 /* ChooseAnisetteServerView.swift */,
 				BFE6073F231AFD2A002B0E8E /* InsetGroupTableViewCell.swift */,
 				BFE60741231B07E6002B0E8E /* SettingsHeaderFooterView.swift */,
 				BFE6073B231AE1E7002B0E8E /* SettingsHeaderFooterView.xib */,
@@ -2296,6 +2301,7 @@
 				BF770E5022BB1CF6002A40FE /* InstallAppOperation.swift */,
 				BFE338DE22F0EADB002E24B9 /* FetchSourceOperation.swift */,
 				BFA8172A23C5633D001B5953 /* FetchAnisetteDataOperation.swift */,
+				82AB00012FC0345000567241 /* AnisetteServer.swift */,
 				BF56D2AB23DF8E170006506D /* FetchAppIDsOperation.swift */,
 				BFC57A642416C72400EB891E /* DeactivateAppOperation.swift */,
 				BFCCB519245E3401001853EA /* VerifyAppOperation.swift */,
@@ -3737,6 +3743,7 @@
 				BF56D2AC23DF8E170006506D /* FetchAppIDsOperation.swift in Sources */,
 				BFC1F38D22AEE3A4003AC21A /* DownloadAppOperation.swift in Sources */,
 				BFE6073A231ADF82002B0E8E /* SettingsViewController.swift in Sources */,
+				82AB00042FC0345000567241 /* ChooseAnisetteServerView.swift in Sources */,
 				D57F2C9126E0070200B9FA39 /* EnableJITOperation.swift in Sources */,
 				BF8CAE4E248AEABA004D6CCE /* UIDevice+Jailbreak.swift in Sources */,
 				D504F5BB2CE566FE00AD3760 /* InstalledAppsCollectionFooterView.swift in Sources */,
@@ -3785,6 +3792,7 @@
 				BFE60742231B07E6002B0E8E /* SettingsHeaderFooterView.swift in Sources */,
 				BFE338E822F10E56002E24B9 /* LaunchViewController.swift in Sources */,
 				BFA8172B23C5633D001B5953 /* FetchAnisetteDataOperation.swift in Sources */,
+				82AB00022FC0345000567241 /* AnisetteServer.swift in Sources */,
 				D552B1D82A042A740066216F /* AppPermissionsCard.swift in Sources */,
 				BFD6B03322DFF20800B86064 /* MyAppsComponents.swift in Sources */,
 				BF41B808233433C100C593A3 /* LoadingState.swift in Sources */,
