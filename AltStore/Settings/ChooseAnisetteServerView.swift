@@ -13,7 +13,7 @@ import AltStoreCore
 struct ChooseAnisetteServerView: View
 {
     @State
-    private var availableServers: [AnisetteServer]?
+    private var availableServers: [AnisetteServer]? = UserDefaults.standard.anisetteServers
     
     @State
     private var isLoading = true
@@ -121,8 +121,8 @@ private extension ChooseAnisetteServerView
         }
         catch
         {
-            errorMessage = error.localizedDescription
-            isShowingError = true
+            // Keep showing cached servers (if any).
+            Logger.sideload.error("Failed to load anisette servers: \(error.localizedDescription, privacy: .public)")
         }
 
         // If preferred URL isn't in the list, it's the user's custom server.

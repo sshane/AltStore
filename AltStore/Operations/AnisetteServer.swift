@@ -34,6 +34,9 @@ extension AnisetteServer
 
         let (data, _) = try await session.data(from: Self.listURL)
         let response = try JSONDecoder().decode(Response.self, from: data)
+
+        UserDefaults.standard.anisetteServers = response.servers
+
         return response.servers
     }
 
@@ -68,4 +71,19 @@ extension AnisetteServer
 
         _ = try decoder.decode(Response.self, from: data)
     }
+}
+
+extension UserDefaults
+{
+    var anisetteServers: [AnisetteServer]? {
+        get {
+            guard let data = _anisetteServers else { return nil }
+            return try? JSONDecoder().decode([AnisetteServer].self, from: data)
+        }
+        set {
+            _anisetteServers = newValue.flatMap { try? JSONEncoder().encode($0) }
+        }
+    }
+
+    @NSManaged @objc(anisetteServers) private var _anisetteServers: Data?
 }
