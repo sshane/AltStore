@@ -8,6 +8,9 @@
       location = "group:Dependencies/AltSign">
    </FileRef>
    <FileRef
+      location = "group:Dependencies/idevice/swift">
+   </FileRef>
+   <FileRef
       location = "group:Dependencies/Roxas/Roxas.xcodeproj">
    </FileRef>
    <FileRef

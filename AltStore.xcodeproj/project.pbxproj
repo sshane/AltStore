@@ -10,6 +10,7 @@
 		2A77E3D272F3D92436FAC272 /* Pods_AltStore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9EEAA842DA87A88A870053B /* Pods_AltStore.framework */; };
 		82D6ED8A2EEA137A009DC668 /* TaskGroup+Collated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82D6ED892EEA137A009DC668 /* TaskGroup+Collated.swift */; };
 		823661F92FA917BB0063A710 /* Minimuxer in Frameworks */ = {isa = PBXBuildFile; productRef = 823661F82FA917BB0063A710 /* Minimuxer */; };
+		CA1DE71000000000000005A2 /* IDevice in Frameworks */ = {isa = PBXBuildFile; productRef = CA1DE71000000000000005A1 /* IDevice */; };
 		A8BCEBEAC0620CF80A2FD26D /* Pods_AltServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FC3822AB1C4CF1D4CDF7445D /* Pods_AltServer.framework */; };
 		BF02419622F2199300129732 /* RefreshAttemptsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF02419522F2199300129732 /* RefreshAttemptsViewController.swift */; };
 		BF0241AA22F29CCD00129732 /* UserDefaults+AltServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0241A922F29CCD00129732 /* UserDefaults+AltServer.swift */; };
@@ -1377,6 +1378,7 @@
 				BF4588882298DD3F00BD7491 /* libxml2.tbd in Frameworks */,
 				BF4588472298D4B000BD7491 /* libimobiledevice.a in Frameworks */,
 				BF088D362501A821008082D9 /* AltSign-Dynamic in Frameworks */,
+				CA1DE71000000000000005A2 /* IDevice in Frameworks */,
 				A8BCEBEAC0620CF80A2FD26D /* Pods_AltServer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2763,6 +2765,7 @@
 			packageProductDependencies = (
 				BF088D352501A821008082D9 /* AltSign-Dynamic */,
 				D58D5F2D26DFE68E00E55E38 /* LaunchAtLogin */,
+				CA1DE71000000000000005A1 /* IDevice */,
 			);
 			productName = AltServer;
 			productReference = BF45868D229872EA00BD7491 /* AltServer.app */;
@@ -3032,6 +3035,7 @@
 				D535CEE62BE95D4C00F96119 /* XCRemoteSwiftPackageReference "SwiftClient" */,
 				D56435E42E2AC35C007D1935 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				823661F72FA917BB0063A710 /* XCRemoteSwiftPackageReference "minimuxer" */,
+				CA1DE71000000000000005A0 /* XCLocalSwiftPackageReference "Dependencies/idevice/swift" */,
 			);
 			productRefGroup = BFD2476B2284B9A500981D42 /* Products */;
 			projectDirPath = "";
@@ -4986,6 +4990,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		CA1DE71000000000000005A0 /* XCLocalSwiftPackageReference "Dependencies/idevice/swift" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Dependencies/idevice/swift;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		823661F72FA917BB0063A710 /* XCRemoteSwiftPackageReference "minimuxer" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -5046,6 +5057,11 @@
 		BF42345B251024B0006D1EB2 /* AltSign-Static */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = "AltSign-Static";
+		};
+		CA1DE71000000000000005A1 /* IDevice */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CA1DE71000000000000005A0 /* XCLocalSwiftPackageReference "Dependencies/idevice/swift" */;
+			productName = IDevice;
 		};
 		D52DD35D2AAA89A600A7F2B6 /* AltSign-Dynamic */ = {
 			isa = XCSwiftPackageProductDependency;
