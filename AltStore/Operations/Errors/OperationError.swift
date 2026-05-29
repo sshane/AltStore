@@ -49,6 +49,7 @@ extension OperationError
         case anisetteServerNotConfigured = 1503 // User hasn't provided an anisette server URL.
         case invalidAnisetteResponse = 1504 // Anisette server returned invalid response.
         case invalidAnisetteServer = 1505 // Provided URL isn't a valid anisette server.
+        case wiredConnectionRequired = 1506 // Operation requires a wired AltServer connection.
     }
 
     static var cancelled: CancellationError { CancellationError() }
@@ -121,6 +122,10 @@ extension OperationError
 
     static func invalidPairingFile(file: String = #fileID, line: UInt = #line) -> OperationError {
         OperationError(code: .invalidPairingFile, sourceFile: file, sourceLine: line)
+    }
+
+    static func wiredConnectionRequired(file: String = #fileID, line: UInt = #line) -> OperationError {
+        OperationError(code: .wiredConnectionRequired, sourceFile: file, sourceLine: line)
     }
 }
 
@@ -223,6 +228,9 @@ struct OperationError: ALTLocalizedError
 
         case .invalidPairingFile:
             return NSLocalizedString("The selected file isn’t a valid pairing file.", comment: "")
+
+        case .wiredConnectionRequired:
+            return NSLocalizedString("A wired connection to AltServer could not be established.", comment: "")
         }
     }
     private var _failureReason: String?
@@ -237,6 +245,7 @@ struct OperationError: ALTLocalizedError
         case .invalidAnisetteResponse: return NSLocalizedString("Try again, or select a different server in Settings → Choose Server.", comment: "")
         case .invalidAnisetteServer: return NSLocalizedString("Make sure the URL points to a valid remote server and try again.", comment: "")
         case .invalidPairingFile: return NSLocalizedString("Make sure the file’s contents are a complete, valid pairing file for this device.", comment: "")
+        case .wiredConnectionRequired: return NSLocalizedString("Connect your device to a computer running AltServer via USB, then try again.", comment: "")
         case .maximumAppIDLimitReached:
             let baseMessage = NSLocalizedString("Delete sideloaded apps to free up App ID slots.", comment: "")
             guard let appName = self.appName, let requiredAppIDs = self.requiredAppIDs, let availableAppIDs = self.availableAppIDs, let date = self.expirationDate else { return baseMessage }

@@ -235,6 +235,28 @@ extension AppManager
         
         return authenticationOperation
     }
+
+    @discardableResult
+    func fetchPairingFile(context: OperationContext = OperationContext(), completionHandler: @escaping (Result<Void, Error>) -> Void) -> FetchPairingFileOperation
+    {
+        let findServerOperation = self.findServer(context: context) { _ in }
+
+        let fetchPairingFileOperation = FetchPairingFileOperation(context: context)
+        fetchPairingFileOperation.resultHandler = { (result) in
+            switch result
+            {
+            case .failure(let error): context.error = error
+            case .success: break
+            }
+
+            completionHandler(result)
+        }
+        fetchPairingFileOperation.addDependency(findServerOperation)
+
+        self.run([fetchPairingFileOperation], context: context)
+
+        return fetchPairingFileOperation
+    }
     
     func deactivateApps(for app: ALTApplication, presentingViewController: UIViewController, completion: @escaping (Result<Void, Error>) -> Void)
     {

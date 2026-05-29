@@ -343,10 +343,12 @@
 		BFF7C920257844FA00E55F36 /* ALTPluginService.m in Sources */ = {isa = PBXBuildFile; fileRef = BF5C5FCE237DF69100EDD0C6 /* ALTPluginService.m */; };
 		BFF7C9342578492100E55F36 /* ALTAnisetteData.m in Sources */ = {isa = PBXBuildFile; fileRef = BFB49AA823834CF900D542D9 /* ALTAnisetteData.m */; };
 		CA00000175E1B0E000000001 /* libimobiledevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF45872B2298D31600BD7491 /* libimobiledevice.a */; };
+		CA05282602000000C0FE0002 /* FetchPairingFileOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA05282601000000C0FE0001 /* FetchPairingFileOperation.swift */; };
 		CA10000000000000C0010005 /* companion_proxy.c in Sources */ = {isa = PBXBuildFile; fileRef = CA10000000000000C0010001 /* companion_proxy.c */; };
 		CA10000000000000C0010006 /* companion_proxy.h in Headers */ = {isa = PBXBuildFile; fileRef = CA10000000000000C0010002 /* companion_proxy.h */; };
 		CA10000000000000C0010007 /* preboard.c in Sources */ = {isa = PBXBuildFile; fileRef = CA10000000000000C0010003 /* preboard.c */; };
 		CA10000000000000C0010008 /* preboard.h in Headers */ = {isa = PBXBuildFile; fileRef = CA10000000000000C0010004 /* preboard.h */; };
+		CA1DE71000000000000005B1 /* DevicePairingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1DE71000000000000005B0 /* DevicePairingManager.swift */; };
 		D50107EC2ADF2E1A0069F2A1 /* AddSourceTextFieldCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D50107EB2ADF2E1A0069F2A1 /* AddSourceTextFieldCell.swift */; };
 		D504F5BB2CE566FE00AD3760 /* InstalledAppsCollectionFooterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D504F5BA2CE566F900AD3760 /* InstalledAppsCollectionFooterView.swift */; };
 		D504F5BD2CE5671700AD3760 /* InstalledAppsCollectionFooterView.xib in Resources */ = {isa = PBXBuildFile; fileRef = D504F5BC2CE5671700AD3760 /* InstalledAppsCollectionFooterView.xib */; };
@@ -1196,10 +1198,12 @@
 		BFF7EC4C25081E9300BDE521 /* AltStore 8.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "AltStore 8.xcdatamodel"; sourceTree = "<group>"; };
 		BFFCFA45248835530077BFCE /* AltDaemon.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AltDaemon.entitlements; sourceTree = "<group>"; };
 		C9EEAA842DA87A88A870053B /* Pods_AltStore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_AltStore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CA05282601000000C0FE0001 /* FetchPairingFileOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchPairingFileOperation.swift; sourceTree = "<group>"; };
 		CA10000000000000C0010001 /* companion_proxy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = companion_proxy.c; path = Dependencies/libimobiledevice/src/companion_proxy.c; sourceTree = SOURCE_ROOT; };
 		CA10000000000000C0010002 /* companion_proxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = companion_proxy.h; path = Dependencies/libimobiledevice/src/companion_proxy.h; sourceTree = SOURCE_ROOT; };
 		CA10000000000000C0010003 /* preboard.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = preboard.c; path = Dependencies/libimobiledevice/src/preboard.c; sourceTree = SOURCE_ROOT; };
 		CA10000000000000C0010004 /* preboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = preboard.h; path = Dependencies/libimobiledevice/src/preboard.h; sourceTree = SOURCE_ROOT; };
+		CA1DE71000000000000005B0 /* DevicePairingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicePairingManager.swift; sourceTree = "<group>"; };
 		D50107EB2ADF2E1A0069F2A1 /* AddSourceTextFieldCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSourceTextFieldCell.swift; sourceTree = "<group>"; };
 		D504F5BA2CE566F900AD3760 /* InstalledAppsCollectionFooterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstalledAppsCollectionFooterView.swift; sourceTree = "<group>"; };
 		D504F5BC2CE5671700AD3760 /* InstalledAppsCollectionFooterView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = InstalledAppsCollectionFooterView.xib; sourceTree = "<group>"; };
@@ -1950,6 +1954,7 @@
 			children = (
 				BF4586C32298CDB800BD7491 /* ALTDeviceManager.h */,
 				BF4586C42298CDB800BD7491 /* ALTDeviceManager.mm */,
+				CA1DE71000000000000005B0 /* DevicePairingManager.swift */,
 				BF3F786322CAA41E008FBD20 /* ALTDeviceManager+Installation.swift */,
 			);
 			path = Devices;
@@ -2304,6 +2309,7 @@
 				BFE338DE22F0EADB002E24B9 /* FetchSourceOperation.swift */,
 				BFA8172A23C5633D001B5953 /* FetchAnisetteDataOperation.swift */,
 				82AB00012FC0345000567241 /* AnisetteServer.swift */,
+				CA05282601000000C0FE0001 /* FetchPairingFileOperation.swift */,
 				BF56D2AB23DF8E170006506D /* FetchAppIDsOperation.swift */,
 				BFC57A642416C72400EB891E /* DeactivateAppOperation.swift */,
 				BFCCB519245E3401001853EA /* VerifyAppOperation.swift */,
@@ -3513,6 +3519,7 @@
 				BF458690229872EA00BD7491 /* AppDelegate.swift in Sources */,
 				BFECAC8424FD950B0077C41F /* ALTConstants.m in Sources */,
 				BF4586C52298CDB800BD7491 /* ALTDeviceManager.mm in Sources */,
+				CA1DE71000000000000005B1 /* DevicePairingManager.swift in Sources */,
 				D58032F02AB2429D00878F5E /* ProcessInfo+Device.swift in Sources */,
 				D59A6B842AA932F700F61259 /* Logger+AltServer.swift in Sources */,
 				BF0241AA22F29CCD00129732 /* UserDefaults+AltServer.swift in Sources */,
@@ -3797,6 +3804,7 @@
 				BFE338E822F10E56002E24B9 /* LaunchViewController.swift in Sources */,
 				BFA8172B23C5633D001B5953 /* FetchAnisetteDataOperation.swift in Sources */,
 				82AB00022FC0345000567241 /* AnisetteServer.swift in Sources */,
+				CA05282602000000C0FE0002 /* FetchPairingFileOperation.swift in Sources */,
 				D552B1D82A042A740066216F /* AppPermissionsCard.swift in Sources */,
 				BFD6B03322DFF20800B86064 /* MyAppsComponents.swift in Sources */,
 				BF41B808233433C100C593A3 /* LoadingState.swift in Sources */,

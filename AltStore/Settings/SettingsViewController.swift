@@ -91,8 +91,6 @@ class SettingsViewController: UITableViewController
     private var debugGestureCounter = 0
     private weak var debugGestureTimer: Timer?
 
-    private var _importPairingFileContinuation: CheckedContinuation<URL, Error>?
-    
     @IBOutlet private var accountNameLabel: UILabel!
     @IBOutlet private var accountEmailLabel: UILabel!
     @IBOutlet private var accountTypeLabel: UILabel!
@@ -259,7 +257,7 @@ private extension SettingsViewController
         
         if Keychain.shared.devicePairingFile == nil
         {
-            self.pairingFileLabel.text = String(localized: "Import Device Pairing File…")
+            self.pairingFileLabel.text = String(localized: "Configure Remote AltServer…")
         }
         else
         {
@@ -603,37 +601,24 @@ private extension SettingsViewController
         }
     }
 
-    func importPairingFile()
+    func configureRemoteAltServer()
     {
         Task<Void, Never> {
             do
             {
-                let fileURL = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
-                    let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.mobiledevicepairing, .propertyList], asCopy: true)
-                    documentPicker.delegate = self
-                    self.present(documentPicker, animated: true, completion: nil)
+                let continueAction = UIAlertAction(title: NSLocalizedString("Continue", comment: ""), style: .default)
+                try await self.presentConfirmationAlert(
+                    title: NSLocalizedString("Configure Remote AltServer", comment: ""),
+                    message: NSLocalizedString("Connect this device to a computer running AltServer, then tap Trust on this device when prompted.", comment: ""),
+                    primaryAction: continueAction
+                )
 
-                    self._importPairingFileContinuation = continuation
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                    AppManager.shared.fetchPairingFile { result in
+                        continuation.resume(with: result)
+                    }
                 }
 
-                let data = try Data(contentsOf: fileURL)
-                
-                struct PairingFile: Decodable
-                {
-                    var UDID: String?
-                    var private_key: Data?
-                }
-                
-                // Check for valid plist with expected value (UDID for lockdown pairing or private_key for RP-pairing)
-                guard let pairingFile = try? PropertyListDecoder().decode(PairingFile.self, from: data),
-                      pairingFile.UDID != nil || pairingFile.private_key != nil
-                else
-                {
-                    Logger.sideload.error("Rejected pairing file at \(fileURL.lastPathComponent, privacy: .public): not a valid plist or missing UDID/private_key.")
-                    throw OperationError.invalidPairingFile()
-                }
-
-                Keychain.shared.devicePairingFile = data
                 self.update()
 
                 let needsRelaunch = Muxer.started
@@ -645,7 +630,7 @@ private extension SettingsViewController
                 }
                 else
                 {
-                    await self.presentAlert(title: NSLocalizedString("Pairing File Imported", comment: ""), message: NSLocalizedString("Your device pairing file has been saved.", comment: ""))
+                    await self.presentAlert(title: NSLocalizedString("Remote AltServer Configured", comment: ""), message: NSLocalizedString("AltStore can now sideload apps on this device without AltServer.", comment: ""))
                 }
             }
             catch is CancellationError
@@ -654,7 +639,7 @@ private extension SettingsViewController
             }
             catch
             {
-                await self.presentAlert(title: NSLocalizedString("Unable to Import Pairing File", comment: ""), message: error.localizedDescription)
+                await self.presentAlert(title: NSLocalizedString("Unable to Configure Remote AltServer", comment: ""), message: error.localizedDescription)
             }
 
             if let selectedIndexPath = self.tableView.indexPathForSelectedRow
@@ -1005,7 +990,7 @@ extension SettingsViewController
             case .pairingFile:
                 if Keychain.shared.devicePairingFile == nil
                 {
-                    self.importPairingFile()
+                    self.configureRemoteAltServer()
                 }
                 else
                 {
@@ -1069,23 +1054,6 @@ extension SettingsViewController
             
         case .account, .patreon, .display, .instructions, .macDirtyCow: break
         }
-    }
-}
-
-extension SettingsViewController: UIDocumentPickerDelegate
-{
-    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL])
-    {
-        guard let fileURL = urls.first else { return }
-
-        self._importPairingFileContinuation?.resume(returning: fileURL)
-        self._importPairingFileContinuation = nil
-    }
-
-    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController)
-    {
-        self._importPairingFileContinuation?.resume(throwing: CancellationError())
-        self._importPairingFileContinuation = nil
     }
 }
 
