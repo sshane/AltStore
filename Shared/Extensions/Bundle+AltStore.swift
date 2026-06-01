@@ -46,6 +46,11 @@ public extension Bundle
         return certificateURL
     }
     
+    var pairingFileURL: URL {
+        let pairingFileURL = self.bundleURL.appendingPathComponent("ALTPairingFile.dat")
+        return pairingFileURL
+    }
+
     var altstorePlistURL: URL {
         let altstorePlistURL = self.bundleURL.appendingPathComponent("AltStore.plist")
         return altstorePlistURL

@@ -9,6 +9,8 @@
 import Cocoa
 import UserNotifications
 import ObjectiveC
+import CryptoKit
+import OSLog
 
 #if STAGING
 let altstoreSourceURL = URL(string: "https://f000.backblazeb2.com/file/altstore-staging/apps-staging.json")!
@@ -198,8 +200,10 @@ extension ALTDeviceManager
                                                                             {
                                                                                 let profiles = try result.get()
                                                                                 
-                                                                                self.install(application, to: device, team: team, certificate: certificate, profiles: profiles) { (result) in
-                                                                                    finish(result.map { application })
+                                                                                self.bundlePairingFile(for: application, device: device, certificate: certificate) { pairingFile in
+                                                                                    self.install(application, to: device, team: team, certificate: certificate, profiles: profiles, pairingFile: pairingFile) { (result) in
+                                                                                        finish(result.map { application })
+                                                                                    }
                                                                                 }
                                                                             }
                                                                             catch
@@ -268,6 +272,42 @@ private extension ALTDeviceManager
             catch
             {
                 completionHandler(.failure(error))
+            }
+        }
+    }
+    
+    // Generates and encrypts a device pairing file to bundle into AltStore.app.
+    func bundlePairingFile(for application: ALTApplication, device: ALTDevice, certificate: ALTCertificate, completionHandler: @escaping (Data?) -> Void)
+    {
+        // Only applies to AltStore installs with a machineIdentifier.
+        guard application.isAltStoreApp, let machineIdentifier = certificate.machineIdentifier else
+        {
+            completionHandler(nil)
+            return
+        }
+
+        let hostName = "AltServer on \(Host.current().localizedName ?? "Mac")"
+
+        Task<Void, Never> {
+            do
+            {
+                let pairingFile = try await DevicePairingManager.shared.generatePairingFile(forDeviceWithUDID: device.identifier, hostName: hostName)
+
+                // Encrypt with a key derived from the certificate's machineIdentifier.
+                let key = SymmetricKey(data: SHA256.hash(data: machineIdentifier.data(using: .utf8)!))
+                let sealedBox = try AES.GCM.seal(pairingFile, using: key)
+
+                guard let sealedData = sealedBox.combined else
+                {
+                    throw RemotePairingError.pairingFailed()
+                }
+
+                completionHandler(sealedData)
+            }
+            catch
+            {
+                Logger.main.notice("Skipped bundling pairing file: \(error.localizedDescription, privacy: .public)")
+                completionHandler(nil)
             }
         }
     }
@@ -921,7 +961,7 @@ private extension ALTDeviceManager
         }
     }
     
-    func install(_ application: ALTApplication, to device: ALTDevice, team: ALTTeam, certificate: ALTCertificate, profiles: [String: ALTProvisioningProfile], completionHandler: @escaping (Result<Void, Error>) -> Void)
+    func install(_ application: ALTApplication, to device: ALTDevice, team: ALTTeam, certificate: ALTCertificate, profiles: [String: ALTProvisioningProfile], pairingFile: Data?, completionHandler: @escaping (Result<Void, Error>) -> Void)
     {
         func prepare(_ bundle: Bundle, additionalInfoDictionaryValues: [String: Any] = [:]) throws
         {
@@ -980,6 +1020,12 @@ private extension ALTDeviceManager
                         
                         let certificateURL = application.fileURL.appendingPathComponent("ALTCertificate.p12")
                         try encryptedData.write(to: certificateURL, options: .atomic)
+                    }
+
+                    if let pairingFile
+                    {
+                        let pairingFileURL = application.fileURL.appendingPathComponent("ALTPairingFile.dat")
+                        try pairingFile.write(to: pairingFileURL, options: .atomic)
                     }
                 }
                 else if infoDictionary.keys.contains(Bundle.Info.deviceID)
