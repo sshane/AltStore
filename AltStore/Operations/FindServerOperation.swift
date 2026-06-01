@@ -63,8 +63,8 @@ class FindServerOperation: ResultOperation<Server?>, @unchecked Sendable
         
         self.discoverLocalServer()
         
-        // If device pairing file exists, start minimuxer and skip server detection.
-        if Keychain.shared.devicePairingFile != nil
+        // If a device pairing file exists, start minimuxer and skip server detection.
+        if AppManager.shared.devicePairingFile != nil
         {
             do
             {

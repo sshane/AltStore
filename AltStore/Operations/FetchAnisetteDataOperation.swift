@@ -82,7 +82,7 @@ class FetchAnisetteDataOperation: ResultOperation<ALTAnisetteData>, @unchecked S
 
                 let anisetteData: ALTAnisetteData
 
-                if Keychain.shared.devicePairingFile != nil
+                if AppManager.shared.devicePairingFile != nil
                 {
                     // AltServerless route
                     anisetteData = try await self.fetchAnisetteDataFromAvailableServer()

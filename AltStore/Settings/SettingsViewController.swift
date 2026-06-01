@@ -255,13 +255,13 @@ private extension SettingsViewController
         self.enforceThreeAppLimitSwitch.isOn = !UserDefaults.standard.ignoreActiveAppsLimit
         self.disableResponseCachingSwitch.isOn = UserDefaults.standard.responseCachingDisabled
         
-        if Keychain.shared.devicePairingFile == nil
+        if AppManager.shared.devicePairingFile == nil
         {
             self.pairingFileLabel.text = String(localized: "Configure Remote AltServer…")
         }
         else
         {
-            self.pairingFileLabel.text = String(localized: "Reset Device Pairing File…")
+            self.pairingFileLabel.text = String(localized: "Reset Remote AltServer…")
         }
         
         self.serverURLLabel.text = UserDefaults.shared.preferredAnisetteServerURL?.host ?? String(localized: "None")
@@ -606,12 +606,24 @@ private extension SettingsViewController
         Task<Void, Never> {
             do
             {
-                let continueAction = UIAlertAction(title: NSLocalizedString("Continue", comment: ""), style: .default)
-                try await self.presentConfirmationAlert(
-                    title: NSLocalizedString("Configure Remote AltServer", comment: ""),
-                    message: NSLocalizedString("Connect this device to a computer running AltServer, then tap Trust on this device when prompted.", comment: ""),
-                    primaryAction: continueAction
-                )
+                if AppManager.shared.devicePairingFile == nil
+                {
+                    let continueAction = UIAlertAction(title: NSLocalizedString("Continue", comment: ""), style: .default)
+                    try await self.presentConfirmationAlert(
+                        title: NSLocalizedString("Configure Remote AltServer", comment: ""),
+                        message: NSLocalizedString("Connect this device to a computer running AltServer, then tap Trust on this device when prompted.", comment: ""),
+                        primaryAction: continueAction
+                    )
+                }
+                else
+                {
+                    let resetAction = UIAlertAction(title: NSLocalizedString("Reset", comment: ""), style: .default)
+                    try await self.presentConfirmationAlert(
+                        title: NSLocalizedString("Reset Remote AltServer", comment: ""),
+                        message: NSLocalizedString("To reset, connect this device to a computer running AltServer, then tap Trust when prompted.", comment: ""),
+                        primaryAction: resetAction
+                    )
+                }
 
                 try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                     AppManager.shared.fetchPairingFile { result in
@@ -647,23 +659,6 @@ private extension SettingsViewController
                 self.tableView.deselectRow(at: selectedIndexPath, animated: true)
             }
         }
-    }
-
-    func resetPairingFile()
-    {
-        let alertController = UIAlertController(title: NSLocalizedString("Are you sure you want to reset your pairing file?", comment: ""),
-                                                message: NSLocalizedString("You'll need to import a new pairing file to sideload apps on this device without AltServer.", comment: ""),
-                                                preferredStyle: .actionSheet)
-        alertController.addAction(UIAlertAction(title: UIAlertAction.cancel.title, style: UIAlertAction.cancel.style) { [weak self] _ in
-            self?.tableView.indexPathForSelectedRow.map { self?.tableView.deselectRow(at: $0, animated: true) }
-        })
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Reset Device Pairing File", comment: ""), style: .destructive) { [weak self] _ in
-            Keychain.shared.devicePairingFile = nil
-            self?.update()
-            self?.tableView.indexPathForSelectedRow.map { self?.tableView.deselectRow(at: $0, animated: true) }
-        })
-
-        self.present(alertController, animated: true)
     }
 
     @IBAction func handleDebugModeGesture(_ gestureRecognizer: UISwipeGestureRecognizer)
@@ -988,14 +983,7 @@ extension SettingsViewController
                 self.chooseAnisetteServer()
 
             case .pairingFile:
-                if Keychain.shared.devicePairingFile == nil
-                {
-                    self.configureRemoteAltServer()
-                }
-                else
-                {
-                    self.resetPairingFile()
-                }
+                self.configureRemoteAltServer()
             }
             
         case .techyThings:

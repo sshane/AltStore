@@ -165,8 +165,8 @@ class InstallAppOperation: ResultOperation<InstalledApp>, @unchecked Sendable
             {
                 do
                 {
-                    // Prefer minimuxer when the user has imported a pairing file; fall back to AltServer otherwise.
-                    if Keychain.shared.devicePairingFile != nil
+                    // Prefer minimuxer when a pairing file is available; fall back to AltServer otherwise.
+                    if AppManager.shared.devicePairingFile != nil
                     {
                         try self.installOnDevice(resignedApp: resignedApp)
                     }

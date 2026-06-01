@@ -14,11 +14,11 @@ import Minimuxer
 
 extension Minimuxer
 {
-    // Starts minimuxer (idempotent) and verifies the user's device is reachable via their provided pairing file.
+    // Starts minimuxer (idempotent) and verifies the user's device is reachable via the pairing file.
     static func startSession() throws
     {
         guard
-            let pairingData = Keychain.shared.devicePairingFile,
+            let pairingData = AppManager.shared.devicePairingFile,
             let pairingFile = String(data: pairingData, encoding: .utf8)
         else { throw OperationError.missingPairingFile() }
 
