@@ -26,6 +26,9 @@ class FindServerOperation: ResultOperation<Server?>, @unchecked Sendable
 {
     let context: OperationContext
     
+    // When true, run full server discovery even if a device pairing file is available.
+    var requiresServer: Bool = false
+
     private var isWiredServerConnectionAvailable = false
     private var localServerMachServiceName: String?
     
@@ -63,8 +66,9 @@ class FindServerOperation: ResultOperation<Server?>, @unchecked Sendable
         
         self.discoverLocalServer()
         
-        // If a device pairing file exists, start minimuxer and skip server detection.
-        if AppManager.shared.devicePairingFile != nil
+        // If a device pairing file exists, start minimuxer and skip server detection — unless
+        // the caller explicitly needs to reach AltServer (e.g. to fetch a new pairing file).
+        if !self.requiresServer, AppManager.shared.devicePairingFile != nil
         {
             do
             {

@@ -271,6 +271,7 @@ extension AppManager
     func fetchPairingFile(context: OperationContext = OperationContext(), completionHandler: @escaping (Result<Void, Error>) -> Void) -> FetchPairingFileOperation
     {
         let findServerOperation = self.findServer(context: context) { _ in }
+        findServerOperation.requiresServer = true // Don't skip server connection (even though a pairing file exists) when regenerating
 
         let fetchPairingFileOperation = FetchPairingFileOperation(context: context)
         fetchPairingFileOperation.resultHandler = { (result) in
