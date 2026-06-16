@@ -46,7 +46,6 @@ extension OperationError
         case vpnNotConnected = 1500 // Local VPN is not currently running.
         case missingPairingFile = 1501 // Pairing file does not exist at expected location.
         case invalidPairingFile = 1502 // Pairing file failed to decode or is missing required value (UDID / private_key).
-        case anisetteServerNotConfigured = 1503 // User hasn't provided an anisette server URL.
         case invalidAnisetteResponse = 1504 // Anisette server returned invalid response.
         case invalidAnisetteServer = 1505 // Provided URL isn't a valid anisette server.
         case wiredConnectionRequired = 1506 // Operation requires a wired AltServer connection.
@@ -106,10 +105,6 @@ extension OperationError
 
     static func missingPairingFile(file: String = #fileID, line: UInt = #line) -> OperationError {
         OperationError(code: .missingPairingFile, sourceFile: file, sourceLine: line)
-    }
-
-    static func anisetteServerNotConfigured(file: String = #fileID, line: UInt = #line) -> OperationError {
-        OperationError(code: .anisetteServerNotConfigured, sourceFile: file, sourceLine: line)
     }
 
     static func invalidAnisetteResponse(file: String = #fileID, line: UInt = #line) -> OperationError {
@@ -217,9 +212,6 @@ struct OperationError: ALTLocalizedError
         case .missingPairingFile:
             return NSLocalizedString("AltStore couldn’t find your device pairing file.", comment: "")
 
-        case .anisetteServerNotConfigured:
-            return NSLocalizedString("AltStore doesn’t have a remote server configured.", comment: "")
-
         case .invalidAnisetteResponse:
             return NSLocalizedString("The remote server returned an invalid response. Try again, or choose a different server in Settings.", comment: "")
 
@@ -241,7 +233,6 @@ struct OperationError: ALTLocalizedError
         case .serverNotFound: return NSLocalizedString("Make sure you're on the same Wi-Fi network as a computer running AltServer, or try connecting this device to your computer via USB.", comment: "")
         case .vpnNotConnected: return NSLocalizedString("Make sure you’re connected to Wi-Fi and a local VPN, then try again.", comment: "")
         case .missingPairingFile: return NSLocalizedString("Re-import your pairing file in Settings → Remote Server.", comment: "")
-        case .anisetteServerNotConfigured: return NSLocalizedString("Add a server URL in Settings, or remove your pairing file to use AltServer.", comment: "")
         case .invalidAnisetteResponse: return NSLocalizedString("Try again, or select a different server in Settings → Choose Server.", comment: "")
         case .invalidAnisetteServer: return NSLocalizedString("Make sure the URL points to a valid remote server and try again.", comment: "")
         case .invalidPairingFile: return NSLocalizedString("Make sure the file’s contents are a complete, valid pairing file for this device.", comment: "")
