@@ -46,9 +46,9 @@ extension OperationError
         case vpnNotConnected = 1500 // Local VPN is not currently running.
         case missingPairingFile = 1501 // Pairing file does not exist at expected location.
         case invalidPairingFile = 1502 // Pairing file failed to decode or is missing required value (UDID / private_key).
-        case invalidAnisetteResponse = 1504 // Anisette server returned invalid response.
-        case invalidAnisetteServer = 1505 // Provided URL isn't a valid anisette server.
-        case wiredConnectionRequired = 1506 // Operation requires a wired AltServer connection.
+        case invalidAnisetteResponse = 1503 // Anisette server returned invalid response.
+        case invalidAnisetteServer = 1504 // Provided URL isn't a valid anisette server.
+        case wiredConnectionRequired = 1505 // Operation requires a wired AltServer connection.
     }
 
     static var cancelled: CancellationError { CancellationError() }
@@ -222,7 +222,7 @@ struct OperationError: ALTLocalizedError
             return NSLocalizedString("The selected file isn’t a valid pairing file.", comment: "")
 
         case .wiredConnectionRequired:
-            return NSLocalizedString("A wired connection to AltServer could not be established.", comment: "")
+            return NSLocalizedString("This device isn’t connected to AltServer via USB.", comment: "")
         }
     }
     private var _failureReason: String?

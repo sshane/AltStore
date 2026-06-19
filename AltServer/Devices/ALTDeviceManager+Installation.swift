@@ -200,7 +200,7 @@ extension ALTDeviceManager
                                                                             {
                                                                                 let profiles = try result.get()
                                                                                 
-                                                                                self.bundlePairingFile(for: application, device: device, certificate: certificate) { pairingFile in
+                                                                                self.encryptedPairingData(for: application, device: device, certificate: certificate) { pairingFile in
                                                                                     self.install(application, to: device, team: team, certificate: certificate, profiles: profiles, pairingFile: pairingFile) { (result) in
                                                                                         finish(result.map { application })
                                                                                     }
@@ -277,7 +277,7 @@ private extension ALTDeviceManager
     }
     
     // Generates and encrypts a device pairing file to bundle into AltStore.app.
-    func bundlePairingFile(for application: ALTApplication, device: ALTDevice, certificate: ALTCertificate, completionHandler: @escaping (Data?) -> Void)
+    func encryptedPairingData(for application: ALTApplication, device: ALTDevice, certificate: ALTCertificate, completionHandler: @escaping (Data?) -> Void)
     {
         // Only applies to AltStore installs with a machineIdentifier.
         guard application.isAltStoreApp, let machineIdentifier = certificate.machineIdentifier else
@@ -299,7 +299,7 @@ private extension ALTDeviceManager
 
                 guard let sealedData = sealedBox.combined else
                 {
-                    throw RemotePairingError.pairingFailed()
+                    throw RemotePairingError.unknown(failureReason: NSLocalizedString("Failed to encrypt the generated pairing file.", comment: ""))
                 }
 
                 completionHandler(sealedData)

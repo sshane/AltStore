@@ -96,7 +96,7 @@ struct ChooseAnisetteServerView: View
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadServers() }
         .refreshable { await loadServers() }
-        .alert("Couldn't save server", isPresented: $isShowingError) {
+        .alert("Couldn't select server", isPresented: $isShowingError) {
             SwiftUI.Button("OK", role: .cancel) { }
         } message: { Text(errorMessage) }
     }
@@ -126,7 +126,7 @@ private extension ChooseAnisetteServerView
         }
 
         // If preferred URL isn't in the list, it's the user's custom server.
-        if let preferredURL, availableServers?.contains(where: { $0.url == preferredURL }) == false
+        if let preferredURL, availableServers?.contains(where: { $0.url == preferredURL }) != true
         {
             customURLText = preferredURL.absoluteString.replacingOccurrences(of: "\(preferredURL.scheme ?? "")://", with: "") // Remove scheme for display
         }
@@ -170,7 +170,7 @@ private extension ChooseAnisetteServerView
             preferredURL = url
 
             // If URL is in our provided list, clear the field (selection will be reflected in the list).
-            if availableServers?.contains(where: { $0.url == url }) == true
+            if let availableServers, availableServers.contains(where: { $0.url == url })
             {
                 customURLText = ""
             }

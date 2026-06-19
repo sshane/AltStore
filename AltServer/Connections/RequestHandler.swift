@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OSLog
 
 typealias ServerConnectionManager = ConnectionManager<ServerRequestHandler>
 
@@ -155,14 +156,14 @@ struct ServerRequestHandler: RequestHandler
                 let pairingFile = try await DevicePairingManager.shared.generatePairingFile(forDeviceWithUDID: request.udid, hostName: hostName)
 
                 // Log byte count only; bytes contain sensitive identifier we don't want to expose.
-                print("Generated pairing file for device \(request.udid) (\(pairingFile.count) bytes)")
+                Logger.main.notice("Generated pairing file for device \(request.udid, privacy: .public) (\(pairingFile.count) bytes)")
 
                 let response = PairingFileResponse(pairingFile: pairingFile)
                 completionHandler(.success(response))
             }
             catch
             {
-                print("Failed to generate pairing file for device \(request.udid):", error)
+                Logger.main.error("Failed to generate pairing file for device \(request.udid, privacy: .public). \(error.localizedDescription, privacy: .public)")
                 completionHandler(.failure(ALTServerError(error)))
             }
         }

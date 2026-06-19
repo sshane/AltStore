@@ -42,26 +42,11 @@ class FetchPairingFileOperation: ResultOperation<Void>, @unchecked Sendable
 
                 let pairingFile = try await self.fetchPairingFile()
 
-                // Validate the plist: must contain either UDID (lockdown) or private_key (RP-pairing).
-                struct PairingFile: Decodable
-                {
-                    var UDID: String?
-                    var private_key: Data?
-                }
-
-                guard let decodedFile = try? PropertyListDecoder().decode(PairingFile.self, from: pairingFile),
-                      decodedFile.UDID != nil || decodedFile.private_key != nil
-                else
-                {
-                    Logger.sideload.error("Invalid pairing file from AltServer: missing UDID/private_key.")
-                    throw OperationError.invalidPairingFile()
-                }
-
-                Keychain.shared.devicePairingFile = pairingFile
+                Keychain.shared.devicePairingFile = pairingFile.data
 
                 try Minimuxer.startSession()
 
-                Logger.sideload.notice("Configured pairing file from AltServer (\(pairingFile.count) bytes).")
+                Logger.sideload.notice("Configured pairing file from AltServer (\(pairingFile.data.count) bytes).")
 
                 self.finish(.success(()))
             }
@@ -75,7 +60,7 @@ class FetchPairingFileOperation: ResultOperation<Void>, @unchecked Sendable
 
 private extension FetchPairingFileOperation
 {
-    func fetchPairingFile() async throws -> Data
+    func fetchPairingFile() async throws -> PairingFile
     {
         guard let server = self.context.server else { throw OperationError.serverNotFound }
         guard server.connectionType == .wired else { throw OperationError.wiredConnectionRequired() }
@@ -83,7 +68,7 @@ private extension FetchPairingFileOperation
 
         return try await withCheckedThrowingContinuation { continuation in
             // Existing bug can call completion twice, so guard against the continuation assert.
-            func finish(_ result: Result<Data, Error>)
+            func finish(_ result: Result<PairingFile, Error>)
             {
                 guard !self.isFinished else { return }
                 continuation.resume(with: result)
@@ -119,9 +104,10 @@ private extension FetchPairingFileOperation
                                     finish(.failure(response.error))
 
                                 case .success(.pairingFile(let response)):
-                                    // Log byte count only; bytes contain sensitive info (device identfier) we don't want to expose.
+                                    // Log byte count only; bytes contain sensitive info (device identifier) we don't want to expose.
                                     Logger.sideload.notice("Received pairing file (\(response.pairingFile.count) bytes).")
-                                    finish(.success(response.pairingFile))
+                                    do { finish(.success(try PairingFile(data: response.pairingFile))) }
+                                    catch { finish(.failure(error)) }
 
                                 case .success: finish(.failure(ALTServerError(.unknownResponse)))
                                 }
@@ -131,5 +117,39 @@ private extension FetchPairingFileOperation
                 }
             }
         }
+    }
+}
+
+// Device pairing file validated on init: must contain either UDID (lockdown) or private_key (RP-pairing).
+private struct PairingFile
+{
+    let data: Data
+
+    init(data: Data) throws
+    {
+        struct Contents: Decodable
+        {
+            var UDID: String?
+            var private_key: Data?
+        }
+
+        let contents: Contents
+        do
+        {
+            contents = try PropertyListDecoder().decode(Contents.self, from: data)
+        }
+        catch
+        {
+            Logger.sideload.error("Failed to decode pairing file. \(error.localizedDescription, privacy: .public)")
+            throw OperationError.invalidPairingFile()
+        }
+
+        guard contents.UDID != nil || contents.private_key != nil else
+        {
+            Logger.sideload.error("Invalid pairing file from AltServer: missing UDID/private_key.")
+            throw OperationError.invalidPairingFile()
+        }
+
+        self.data = data
     }
 }

@@ -22,7 +22,7 @@ class DevicePairingManager
         var muxConnection: OpaquePointer? // Use OpaquePointer because we can't import expected type 'UsbmuxdConnectionHandle'
         if let connectionError = idevice_usbmuxd_new_default_connection(0, &muxConnection)
         {
-            throw RemotePairingError.pairingFailed(ffiError: connectionError)
+            throw RemotePairingError.unknown(failureReason: NSLocalizedString("Couldn't connect to usbmuxd.", comment: ""), ffiError: connectionError)
         }
         defer { idevice_usbmuxd_connection_free(muxConnection) }
 
@@ -32,13 +32,13 @@ class DevicePairingManager
         var address: OpaquePointer?
         if let addressError = idevice_usbmuxd_default_addr_new(&address)
         {
-            throw RemotePairingError.pairingFailed(ffiError: addressError)
+            throw RemotePairingError.unknown(failureReason: NSLocalizedString("Couldn't create usbmuxd address.", comment: ""), ffiError: addressError)
         }
 
         var provider: OpaquePointer?
         if let providerError = usbmuxd_provider_new(address, 0, udid, deviceID, hostName, &provider)
         {
-            throw RemotePairingError.pairingFailed(ffiError: providerError)
+            throw RemotePairingError.unknown(failureReason: NSLocalizedString("Couldn't create device provider.", comment: ""), ffiError: providerError)
         }
         defer { idevice_provider_free(provider) }
 
@@ -55,12 +55,12 @@ class DevicePairingManager
         var length: UInt = 0
         if let serializationError = rp_pairing_file_to_bytes(pairingFileHandle, &bytes, &length)
         {
-            throw RemotePairingError.pairingFailed(ffiError: serializationError)
+            throw RemotePairingError.unknown(failureReason: NSLocalizedString("Couldn't serialize pairing file.", comment: ""), ffiError: serializationError)
         }
 
         guard let bytes else
         {
-            throw RemotePairingError.pairingFailed()
+            throw RemotePairingError.unknown(failureReason: NSLocalizedString("Pairing file serialized to empty data.", comment: ""))
         }
         defer { idevice_data_free(bytes, length) }
 
@@ -77,7 +77,7 @@ private extension DevicePairingManager
         var deviceCount: Int32 = 0
         if let devicesError = idevice_usbmuxd_get_devices(muxConnection, &devices, &deviceCount)
         {
-            throw RemotePairingError.pairingFailed(ffiError: devicesError)
+            throw RemotePairingError.unknown(failureReason: NSLocalizedString("Couldn't query connected devices.", comment: ""), ffiError: devicesError)
         }
         defer { idevice_usbmuxd_device_list_free(devices, deviceCount) }
 
@@ -106,7 +106,7 @@ extension RemotePairingError
 
         case deviceNotConnected
         case couldntPairWithDevice
-        case pairingFailed
+        case unknown
     }
 
     static func deviceNotConnected(udid: String, file: String = #fileID, line: UInt = #line) -> RemotePairingError {
@@ -117,8 +117,9 @@ extension RemotePairingError
         RemotePairingError(code: .couldntPairWithDevice, ffiError: ffiError, sourceFile: file, sourceLine: line)
     }
 
-    static func pairingFailed(ffiError: UnsafeMutablePointer<IdeviceFfiError>? = nil, file: String = #fileID, line: UInt = #line) -> RemotePairingError {
-        RemotePairingError(code: .pairingFailed, ffiError: ffiError, sourceFile: file, sourceLine: line)
+    // Internal/unexpected failures where specific reason doesn't need to be exposed to the user
+    static func unknown(failureReason: String, ffiError: UnsafeMutablePointer<IdeviceFfiError>? = nil, file: String = #fileID, line: UInt = #line) -> RemotePairingError {
+        RemotePairingError(code: .unknown, ffiError: ffiError, unknownFailureReason: failureReason, sourceFile: file, sourceLine: line)
     }
 }
 
@@ -131,14 +132,16 @@ struct RemotePairingError: ALTLocalizedError
     @UserInfoValue var udid: String?
     @UserInfoValue var ffiReason: String?
     @UserInfoValue var ffiCode: Int?
+    @UserInfoValue var unknownFailureReason: String?
 
     var sourceFile: String?
     var sourceLine: UInt?
 
-    fileprivate init(code: Code, ffiError: UnsafeMutablePointer<IdeviceFfiError>? = nil, udid: String? = nil, sourceFile: String? = nil, sourceLine: UInt? = nil)
+    fileprivate init(code: Code, ffiError: UnsafeMutablePointer<IdeviceFfiError>? = nil, udid: String? = nil, unknownFailureReason: String? = nil, sourceFile: String? = nil, sourceLine: UInt? = nil)
     {
         self.code = code
         self.udid = udid
+        self.unknownFailureReason = unknownFailureReason
         self.sourceFile = sourceFile
         self.sourceLine = sourceLine
 
@@ -162,8 +165,8 @@ struct RemotePairingError: ALTLocalizedError
             return NSLocalizedString("This device isn’t connected to AltServer via USB.", comment: "")
         case .couldntPairWithDevice:
             return NSLocalizedString("AltServer couldn’t pair with this device.", comment: "")
-        case .pairingFailed:
-            return NSLocalizedString("AltServer couldn’t set up the pairing connection.", comment: "")
+        case .unknown:
+            return NSLocalizedString("Remote AltServer couldn't be configured for this device.", comment: "")
         }
     }
 
@@ -174,8 +177,8 @@ struct RemotePairingError: ALTLocalizedError
             return NSLocalizedString("Connect your device to this computer with a cable, then try again.", comment: "")
         case .couldntPairWithDevice:
             return NSLocalizedString("Make sure your device is unlocked, then tap Trust when prompted.", comment: "")
-        case .pairingFailed:
-            return NSLocalizedString("Try unplugging and reconnecting your device, then try again.", comment: "")
+        case .unknown:
+            return NSLocalizedString("Try again. If the problem continues, reconnect your device or restart your computer.", comment: "")
         }
     }
 }

@@ -192,7 +192,7 @@ private extension FetchAnisetteDataOperation
             }
             catch
             {
-                Logger.sideload.notice("Anisette server \(server.name, privacy: .public) failed: \(error.localizedDescription, privacy: .public). Trying next.")
+                Logger.sideload.error("Anisette server \(server.name, privacy: .public) failed: \(error.localizedDescription, privacy: .public). Trying next.")
             }
         }
 

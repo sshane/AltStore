@@ -642,7 +642,7 @@ private extension SettingsViewController
                 }
                 else
                 {
-                    await self.presentAlert(title: NSLocalizedString("Remote AltServer Configured", comment: ""), message: NSLocalizedString("AltStore can now sideload apps on this device without AltServer.", comment: ""))
+                    await self.presentAlert(title: NSLocalizedString("Remote AltServer Configured", comment: ""), message: NSLocalizedString("AltStore can now sideload apps on this device without a computer.", comment: ""))
                 }
             }
             catch is CancellationError
