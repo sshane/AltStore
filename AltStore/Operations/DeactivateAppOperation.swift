@@ -96,7 +96,7 @@ private extension DeactivateAppOperation
     // installed on the device, filter by bundle identifier, remove each by UUID.
     func deactivateOnDevice(bundleIdentifiers: Set<String>) throws
     {
-        guard Minimuxer.isDeviceReachable() else { throw OperationError.vpnNotConnected() }
+        guard AppManager.shared.isReachableOnDevice() else { throw OperationError.vpnNotConnected() }
 
         // misagent doesn't expose a remove-by-bundle-ID primitive, so drop installed
         // profiles into a temp directory and filter to the ones we want to remove.

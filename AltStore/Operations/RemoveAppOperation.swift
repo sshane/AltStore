@@ -91,7 +91,7 @@ private extension RemoveAppOperation
 {
     func removeOnDevice(bundleIdentifier: String) throws
     {
-        guard Minimuxer.isDeviceReachable() else { throw OperationError.vpnNotConnected() }
+        guard AppManager.shared.isReachableOnDevice() else { throw OperationError.vpnNotConnected() }
 
         do
         {

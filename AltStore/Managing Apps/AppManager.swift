@@ -20,6 +20,8 @@ import AltStoreCore
 import AltSign
 import Roxas
 
+import Minimuxer
+
 extension AppManager
 {
     static let didFetchSourceNotification = Notification.Name("io.altstore.AppManager.didFetchSource")
@@ -123,6 +125,41 @@ extension AppManager
             Logger.sideload.error("Bundled pairing file decrypt failed: \(error.localizedDescription, privacy: .public)")
             return nil
         }
+    }
+
+    // Starts on-device connection via minimuxer (idempotent).
+    func startOnDeviceConnection() throws
+    {
+        guard
+            let pairingData = self.devicePairingFile,
+            let pairingFile = String(data: pairingData, encoding: .utf8)
+        else { throw OperationError.missingPairingFile() }
+
+        let logPath = URL.documentsDirectory.appending(path: "minimuxer.txt").path
+
+        do
+        {
+            Minimuxer.retargetUsbmuxdAddr()
+            try Minimuxer.start(pairingFile: pairingFile, logPath: logPath)
+        }
+        catch
+        {
+            Logger.sideload.error("Failed to start device client: \(error.localizedDescription, privacy: .public)")
+            throw (error as NSError).withLocalizedFailure(String(localized: "AltStore couldn’t start the device client."))
+        }
+
+        guard self.isReachableOnDevice() else { throw OperationError.vpnNotConnected() }
+    }
+
+    // Returns false when the VPN tunnel is down, the network is unavailable, or the device isn't responding.
+    func isReachableOnDevice() -> Bool
+    {
+        guard Minimuxer.testDeviceConnection(ifaddr: "10.7.0.1") else
+        {
+            Logger.sideload.error("Device not reachable at 10.7.0.1 — VPN tunnel likely down.")
+            return false
+        }
+        return true
     }
 }
 
@@ -240,6 +277,27 @@ extension AppManager
         return findServerOperation
     }
     
+    // Establishes how we'll reach the device for the current mode: starts the device session
+    // when a pairing file is configured (Remote AltServer), otherwise discovers an AltServer.
+    @discardableResult
+    func prepareServer(context: OperationContext = OperationContext()) -> Foundation.Operation
+    {
+        guard AppManager.shared.devicePairingFile != nil else
+        {
+            return self.findServer(context: context) { _ in }
+        }
+
+        // Starts minimuxer on-device to enable sideloading via the pairing file.
+        let startDeviceSessionOperation = RSTAsyncBlockOperation { (operation) in
+            do { try AppManager.shared.startOnDeviceConnection() }
+            catch { context.error = error }
+            operation.finish()
+        }
+        self.run([startDeviceSessionOperation], context: context)
+
+        return startDeviceSessionOperation
+    }
+
     @discardableResult
     func authenticate(presentingViewController: UIViewController?, context: AuthenticatedOperationContext = AuthenticatedOperationContext(), completionHandler: @escaping (Result<(ALTTeam, ALTCertificate, ALTAppleAPISession), Error>) -> Void) -> AuthenticationOperation
     {
@@ -248,7 +306,7 @@ extension AppManager
             return operation
         }
         
-        let findServerOperation = self.findServer(context: context) { _ in }
+        let prepareServerOperation = self.prepareServer(context: context)
         
         let authenticationOperation = AuthenticationOperation(context: context, presentingViewController: presentingViewController)
         authenticationOperation.resultHandler = { (result) in
@@ -260,7 +318,7 @@ extension AppManager
             
             completionHandler(result)
         }
-        authenticationOperation.addDependency(findServerOperation)
+        authenticationOperation.addDependency(prepareServerOperation)
         
         self.run([authenticationOperation], context: context)
         
@@ -271,7 +329,6 @@ extension AppManager
     func fetchPairingFile(context: OperationContext = OperationContext(), completionHandler: @escaping (Result<Void, Error>) -> Void) -> FetchPairingFileOperation
     {
         let findServerOperation = self.findServer(context: context) { _ in }
-        findServerOperation.requiresServer = true // Don't skip server connection (even though a pairing file exists) when regenerating
 
         let fetchPairingFileOperation = FetchPairingFileOperation(context: context)
         fetchPairingFileOperation.resultHandler = { (result) in
@@ -849,13 +906,13 @@ extension AppManager
             // authentication, so we keep it separate.
             let context = OperationContext()
             
-            let findServerOperation = self.findServer(context: context) { _ in }
+            let prepareServerOperation = self.prepareServer(context: context)
             
             let deactivateAppOperation = DeactivateAppOperation(app: installedApp, context: context)
             deactivateAppOperation.resultHandler = { (result) in
                 completionHandler(result)
             }
-            deactivateAppOperation.addDependency(findServerOperation)
+            deactivateAppOperation.addDependency(prepareServerOperation)
             
             self.run([deactivateAppOperation], context: context, requiresSerialQueue: true)
         }

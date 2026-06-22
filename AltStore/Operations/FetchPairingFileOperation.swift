@@ -12,8 +12,6 @@ import AltStoreCore
 import AltSign
 import Roxas
 
-import Minimuxer
-
 @objc(FetchPairingFileOperation)
 class FetchPairingFileOperation: ResultOperation<Void>, @unchecked Sendable
 {
@@ -44,7 +42,8 @@ class FetchPairingFileOperation: ResultOperation<Void>, @unchecked Sendable
 
                 Keychain.shared.devicePairingFile = pairingFile.data
 
-                try Minimuxer.startSession()
+                // Restart on-device connection so it picks up the newly-fetched pairing file.
+                try AppManager.shared.startOnDeviceConnection()
 
                 Logger.sideload.notice("Configured pairing file from AltServer (\(pairingFile.data.count) bytes).")
 

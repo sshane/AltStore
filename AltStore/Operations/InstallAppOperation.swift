@@ -232,7 +232,7 @@ private extension InstallAppOperation
 
         Logger.sideload.notice("Transferring \(bundleIdentifier, privacy: .public) to device...")
 
-        guard Minimuxer.isDeviceReachable() else { throw OperationError.vpnNotConnected() }
+        guard AppManager.shared.isReachableOnDevice() else { throw OperationError.vpnNotConnected() }
 
         do
         {

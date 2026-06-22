@@ -80,7 +80,7 @@ private extension RefreshAppOperation
 {
     func refreshOnDevice(profiles: Set<ALTProvisioningProfile>) throws
     {
-        guard Minimuxer.isDeviceReachable() else { throw OperationError.vpnNotConnected() }
+        guard AppManager.shared.isReachableOnDevice() else { throw OperationError.vpnNotConnected() }
 
         for profile in profiles
         {
