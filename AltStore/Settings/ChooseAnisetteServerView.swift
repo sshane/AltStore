@@ -117,7 +117,7 @@ private extension ChooseAnisetteServerView
 
         do
         {
-            availableServers = try await AnisetteServer.fetchAvailable()
+            availableServers = try await AnisetteServerManager.shared.fetchServers()
         }
         catch
         {
@@ -163,7 +163,7 @@ private extension ChooseAnisetteServerView
 
         do
         {
-            try await AnisetteServer.validate(url: url)
+            try await AnisetteServerManager.shared.validate(url)
 
             UserDefaults.shared.preferredAnisetteServerURL = url
             Keychain.shared.anisetteADIPB = nil // adi.pb is provisioned against a specific server; clear it so we can re-provision cleanly.

@@ -173,7 +173,7 @@ private extension FetchAnisetteDataOperation
         let servers: [AnisetteServer]
         do
         {
-            servers = try await AnisetteServer.fetchAvailable(using: self.session)
+            servers = try await AnisetteServerManager.shared.fetchServers()
         }
         catch
         {
