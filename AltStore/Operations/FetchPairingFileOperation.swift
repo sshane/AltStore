@@ -42,9 +42,6 @@ class FetchPairingFileOperation: ResultOperation<Void>, @unchecked Sendable
 
                 Keychain.shared.devicePairingFile = pairingFile.data
 
-                // Restart on-device connection so it picks up the newly-fetched pairing file.
-                try AppManager.shared.startOnDeviceConnection()
-
                 Logger.sideload.notice("Configured pairing file from AltServer (\(pairingFile.data.count) bytes).")
 
                 self.finish(.success(()))
