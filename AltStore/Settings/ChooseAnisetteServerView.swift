@@ -39,7 +39,7 @@ struct ChooseAnisetteServerView: View
                 Section("Popular") {
                     ForEach(availableServers) { server in
                         SwiftUI.Button {
-                            selectPopular(server)
+                            Task { await selectServer(url: server.url) }
                         } label: {
                             HStack {
                                 VStack(alignment: .leading) {
@@ -132,14 +132,30 @@ private extension ChooseAnisetteServerView
         }
     }
 
-    func selectPopular(_ server: AnisetteServer)
+    // Pings the server, then makes it the preferred server. Leaves selection unchanged if it's unreachable.
+    func selectServer(url: URL) async
     {
-        guard server.url != preferredURL else { return }
+        guard url != preferredURL else { return }
 
-        UserDefaults.shared.preferredAnisetteServerURL = server.url
-        Keychain.shared.anisetteADIPB = nil // adi.pb is provisioned against a specific server; clear it so we can re-provision cleanly.
-        preferredURL = server.url
-        customURLText = ""
+        do
+        {
+            try await AnisetteServerManager.shared.validate(url)
+        }
+        catch
+        {
+            errorMessage = error.localizedDescription
+            isShowingError = true
+            return
+        }
+
+        UserDefaults.shared.preferredAnisetteServerURL = url
+        preferredURL = url
+
+        // Clear the custom field when selecting a known server.
+        if availableServers?.contains(where: { $0.url == url }) == true
+        {
+            customURLText = ""
+        }
     }
 
     func submitCustom() async
@@ -158,28 +174,8 @@ private extension ChooseAnisetteServerView
             isShowingError = true
             return
         }
-        
-        guard url != preferredURL else { return }
 
-        do
-        {
-            try await AnisetteServerManager.shared.validate(url)
-
-            UserDefaults.shared.preferredAnisetteServerURL = url
-            Keychain.shared.anisetteADIPB = nil // adi.pb is provisioned against a specific server; clear it so we can re-provision cleanly.
-            preferredURL = url
-
-            // If URL is in our provided list, clear the field (selection will be reflected in the list).
-            if let availableServers, availableServers.contains(where: { $0.url == url })
-            {
-                customURLText = ""
-            }
-        }
-        catch
-        {
-            errorMessage = error.localizedDescription
-            isShowingError = true
-        }
+        await selectServer(url: url)
     }
 }
 

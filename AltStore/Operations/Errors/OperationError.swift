@@ -213,7 +213,7 @@ struct OperationError: ALTLocalizedError
             return NSLocalizedString("AltStore couldn’t find your device pairing file.", comment: "")
 
         case .invalidAnisetteResponse:
-            return NSLocalizedString("The remote server returned an invalid response. Try again, or choose a different server in Settings.", comment: "")
+            return NSLocalizedString("The remote server isn’t responding correctly and may be temporarily down. Try again, or choose a different server in Settings.", comment: "")
 
         case .invalidAnisetteServer:
             return NSLocalizedString("The URL doesn’t point to a valid remote server.", comment: "")

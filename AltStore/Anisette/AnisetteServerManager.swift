@@ -67,7 +67,12 @@ class AnisetteServerManager
                 throw OperationError.invalidAnisetteServer()
             }
 
-            guard urlResponse.statusCode == 200 else { throw URLError(.badServerResponse) }
+            // Server is reachable but erroring (e.g. 502/522 when its backend is down).
+            guard urlResponse.statusCode == 200 else
+            {
+                Logger.sideload.error("Anisette server \(clientInfoURL, privacy: .public) returned status \(urlResponse.statusCode).")
+                throw OperationError.invalidAnisetteResponse()
+            }
         }
 
         struct Response: Decodable
@@ -79,6 +84,14 @@ class AnisetteServerManager
         let decoder = Foundation.JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
 
-        _ = try decoder.decode(Response.self, from: data)
+        do
+        {
+            _ = try decoder.decode(Response.self, from: data)
+        }
+        catch
+        {
+            // Responded with 200, but the body isn't valid anisette client_info.
+            throw OperationError.invalidAnisetteResponse()
+        }
     }
 }
