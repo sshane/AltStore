@@ -91,8 +91,6 @@ class SettingsViewController: UITableViewController
     private var debugGestureCounter = 0
     private weak var debugGestureTimer: Timer?
 
-    private var _importPairingFileContinuation: CheckedContinuation<URL, Error>?
-    
     @IBOutlet private var accountNameLabel: UILabel!
     @IBOutlet private var accountEmailLabel: UILabel!
     @IBOutlet private var accountTypeLabel: UILabel!
@@ -257,16 +255,16 @@ private extension SettingsViewController
         self.enforceThreeAppLimitSwitch.isOn = !UserDefaults.standard.ignoreActiveAppsLimit
         self.disableResponseCachingSwitch.isOn = UserDefaults.standard.responseCachingDisabled
         
-        if Keychain.shared.devicePairingFile == nil
+        if AppManager.shared.devicePairingFile == nil
         {
-            self.pairingFileLabel.text = String(localized: "Import Device Pairing File…")
+            self.pairingFileLabel.text = String(localized: "Configure Remote AltServer…")
         }
         else
         {
-            self.pairingFileLabel.text = String(localized: "Reset Device Pairing File…")
+            self.pairingFileLabel.text = String(localized: "Reset Remote AltServer…")
         }
         
-        self.serverURLLabel.text = UserDefaults.shared.anisetteServerURL?.host ?? String(localized: "None")
+        self.serverURLLabel.text = UserDefaults.shared.preferredAnisetteServerURL?.host ?? String(localized: "None")
 
         if self.isViewLoaded
         {
@@ -349,7 +347,7 @@ private extension SettingsViewController
         case .remoteAltServer:
             if isHeader
             {
-                settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("REMOTE SERVER", comment: "")
+                settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("REMOTE ALTSERVER", comment: "")
 
                 settingsHeaderFooterView.button.setTitle(NSLocalizedString("LEARN MORE", comment: ""), for: .normal)
                 settingsHeaderFooterView.button.addTarget(self, action: #selector(SettingsViewController.openRemoteAltServerLearnMore(_:)), for: .primaryActionTriggered)
@@ -592,52 +590,10 @@ private extension SettingsViewController
         return (encryptedData, password)
     }
     
-    func editAnisetteServerURL()
+    func chooseAnisetteServer()
     {
-        func promptForServerURL()
-        {
-            Task<Void, Never> {
-                do
-                {
-                    try await AppManager.shared.updateAnisetteServerURL(presentingViewController: self)
-                    self.update()
-                }
-                catch is CancellationError
-                {
-                    // Ignore
-                }
-                catch
-                {
-                    Logger.sideload.error("Unexpected error editing anisette server URL: \(error.localizedDescription, privacy: .public)")
-                }
-            }
-        }
-
-        if UserDefaults.shared.anisetteServerURL == nil
-        {
-            promptForServerURL()
-        }
-        else
-        {
-            let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-
-            alertController.addAction(UIAlertAction(title: String(localized: "Change"), style: .default) { _ in
-                promptForServerURL()
-            })
-            alertController.addAction(UIAlertAction(title: String(localized: "Remove"), style: .destructive) { [weak self] _ in
-                // adi.pb is provisioned against a specific server URL; clear it so we can re-provision cleanly.
-                UserDefaults.shared.anisetteServerURL = nil
-                Keychain.shared.anisetteADIPB = nil
-                self?.update()
-            })
-            alertController.addAction(.cancel)
-
-            alertController.popoverPresentationController?.sourceView = self.tableView
-            let indexPath = IndexPath(row: RemoteAltServerRow.serverURL.rawValue, section: Section.remoteAltServer.rawValue)
-            alertController.popoverPresentationController?.sourceRect = self.tableView.rectForRow(at: indexPath)
-
-            self.present(alertController, animated: true)
-        }
+        let hostingController = ChooseAnisetteServerView.makeViewController()
+        self.navigationController?.pushViewController(hostingController, animated: true)
 
         if let selectedIndexPath = self.tableView.indexPathForSelectedRow
         {
@@ -645,37 +601,36 @@ private extension SettingsViewController
         }
     }
 
-    func importPairingFile()
+    func configureRemoteAltServer()
     {
         Task<Void, Never> {
             do
             {
-                let fileURL = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
-                    let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.mobiledevicepairing, .propertyList], asCopy: true)
-                    documentPicker.delegate = self
-                    self.present(documentPicker, animated: true, completion: nil)
-
-                    self._importPairingFileContinuation = continuation
-                }
-
-                let data = try Data(contentsOf: fileURL)
-                
-                struct PairingFile: Decodable
+                if AppManager.shared.devicePairingFile == nil
                 {
-                    var UDID: String?
-                    var private_key: Data?
+                    let continueAction = UIAlertAction(title: NSLocalizedString("Continue", comment: ""), style: .default)
+                    try await self.presentConfirmationAlert(
+                        title: NSLocalizedString("Configure Remote AltServer", comment: ""),
+                        message: NSLocalizedString("Connect this device to a computer running AltServer, then tap Trust on this device when prompted.", comment: ""),
+                        primaryAction: continueAction
+                    )
                 }
-                
-                // Check for valid plist with expected value (UDID for lockdown pairing or private_key for RP-pairing)
-                guard let pairingFile = try? PropertyListDecoder().decode(PairingFile.self, from: data),
-                      pairingFile.UDID != nil || pairingFile.private_key != nil
                 else
                 {
-                    Logger.sideload.error("Rejected pairing file at \(fileURL.lastPathComponent, privacy: .public): not a valid plist or missing UDID/private_key.")
-                    throw OperationError.invalidPairingFile()
+                    let resetAction = UIAlertAction(title: NSLocalizedString("Reset", comment: ""), style: .default)
+                    try await self.presentConfirmationAlert(
+                        title: NSLocalizedString("Reset Remote AltServer", comment: ""),
+                        message: NSLocalizedString("To reset, connect this device to a computer running AltServer, then tap Trust when prompted.", comment: ""),
+                        primaryAction: resetAction
+                    )
                 }
 
-                Keychain.shared.devicePairingFile = data
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                    AppManager.shared.fetchPairingFile { result in
+                        continuation.resume(with: result)
+                    }
+                }
+
                 self.update()
 
                 let needsRelaunch = Muxer.started
@@ -687,7 +642,7 @@ private extension SettingsViewController
                 }
                 else
                 {
-                    await self.presentAlert(title: NSLocalizedString("Pairing File Imported", comment: ""), message: NSLocalizedString("Your device pairing file has been saved.", comment: ""))
+                    await self.presentAlert(title: NSLocalizedString("Remote AltServer Configured", comment: ""), message: NSLocalizedString("AltStore can now sideload apps on this device without a computer.", comment: ""))
                 }
             }
             catch is CancellationError
@@ -696,7 +651,7 @@ private extension SettingsViewController
             }
             catch
             {
-                await self.presentAlert(title: NSLocalizedString("Unable to Import Pairing File", comment: ""), message: error.localizedDescription)
+                await self.presentAlert(title: NSLocalizedString("Unable to Configure Remote AltServer", comment: ""), message: error.localizedDescription)
             }
 
             if let selectedIndexPath = self.tableView.indexPathForSelectedRow
@@ -704,23 +659,6 @@ private extension SettingsViewController
                 self.tableView.deselectRow(at: selectedIndexPath, animated: true)
             }
         }
-    }
-
-    func resetPairingFile()
-    {
-        let alertController = UIAlertController(title: NSLocalizedString("Are you sure you want to reset your pairing file?", comment: ""),
-                                                message: NSLocalizedString("You'll need to import a new pairing file to sideload apps on this device without AltServer.", comment: ""),
-                                                preferredStyle: .actionSheet)
-        alertController.addAction(UIAlertAction(title: UIAlertAction.cancel.title, style: UIAlertAction.cancel.style) { [weak self] _ in
-            self?.tableView.indexPathForSelectedRow.map { self?.tableView.deselectRow(at: $0, animated: true) }
-        })
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Reset Device Pairing File", comment: ""), style: .destructive) { [weak self] _ in
-            Keychain.shared.devicePairingFile = nil
-            self?.update()
-            self?.tableView.indexPathForSelectedRow.map { self?.tableView.deselectRow(at: $0, animated: true) }
-        })
-
-        self.present(alertController, animated: true)
     }
 
     @IBAction func handleDebugModeGesture(_ gestureRecognizer: UISwipeGestureRecognizer)
@@ -1042,17 +980,10 @@ extension SettingsViewController
             switch row
             {
             case .serverURL:
-                self.editAnisetteServerURL()
+                self.chooseAnisetteServer()
 
             case .pairingFile:
-                if Keychain.shared.devicePairingFile == nil
-                {
-                    self.importPairingFile()
-                }
-                else
-                {
-                    self.resetPairingFile()
-                }
+                self.configureRemoteAltServer()
             }
             
         case .techyThings:
@@ -1111,23 +1042,6 @@ extension SettingsViewController
             
         case .account, .patreon, .display, .instructions, .macDirtyCow: break
         }
-    }
-}
-
-extension SettingsViewController: UIDocumentPickerDelegate
-{
-    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL])
-    {
-        guard let fileURL = urls.first else { return }
-
-        self._importPairingFileContinuation?.resume(returning: fileURL)
-        self._importPairingFileContinuation = nil
-    }
-
-    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController)
-    {
-        self._importPairingFileContinuation?.resume(throwing: CancellationError())
-        self._importPairingFileContinuation = nil
     }
 }
 

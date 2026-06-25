@@ -8,6 +8,7 @@
 
 import Foundation
 import Network
+import OSLog
 
 public protocol RequestHandler
 {
@@ -22,6 +23,8 @@ public protocol RequestHandler
     func handleRemoveAppRequest(_ request: RemoveAppRequest, for connection: Connection, completionHandler: @escaping (Result<RemoveAppResponse, Error>) -> Void)
     
     func handleEnableUnsignedCodeExecutionRequest(_ request: EnableUnsignedCodeExecutionRequest, for connection: Connection, completionHandler: @escaping (Result<EnableUnsignedCodeExecutionResponse, Error>) -> Void)
+
+    func handlePairingFileRequest(_ request: PairingFileRequest, for connection: Connection, completionHandler: @escaping (Result<PairingFileResponse, Error>) -> Void)
 }
 
 public protocol ConnectionHandler: AnyObject
@@ -115,14 +118,14 @@ private extension ConnectionManager
             {
                 let response = try result.get()
                 connection.send(response, shouldDisconnect: true) { (result) in
-                    print("Sent response \(response) with result:", result)
+                    Logger.main.info("Sent response \(String(describing: response), privacy: .private(mask: .hash)) with result: \(String(describing: result), privacy: .public)") // May contain sensitive info (e.g. pairing bytes)
                 }
             }
             catch
             {
                 let response = ErrorResponse(error: ALTServerError(error))
                 connection.send(response, shouldDisconnect: true) { (result) in
-                    print("Sent error response \(response) with result:", result)
+                    Logger.main.error("Sent error response \(String(describing: response), privacy: .private(mask: .hash)) with result: \(String(describing: result), privacy: .public)")
                 }
             }
         }
@@ -166,6 +169,11 @@ private extension ConnectionManager
                     finish(result)
                 }
                 
+            case .success(.pairingFile(let request)):
+                self.requestHandler.handlePairingFileRequest(request, for: connection) { (result) in
+                    finish(result)
+                }
+
             case .success(.unknown):
                 finish(Result<ErrorResponse, Error>.failure(ALTServerError(.unknownRequest)))
             }

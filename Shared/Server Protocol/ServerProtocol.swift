@@ -26,6 +26,7 @@ public enum ServerRequest: Decodable
     case removeProvisioningProfiles(RemoveProvisioningProfilesRequest)
     case removeApp(RemoveAppRequest)
     case enableUnsignedCodeExecution(EnableUnsignedCodeExecutionRequest)
+    case pairingFile(PairingFileRequest)
     case unknown(identifier: String, version: Int)
     
     var identifier: String {
@@ -38,6 +39,7 @@ public enum ServerRequest: Decodable
         case .removeProvisioningProfiles(let request): return request.identifier
         case .removeApp(let request): return request.identifier
         case .enableUnsignedCodeExecution(let request): return request.identifier
+        case .pairingFile(let request): return request.identifier
         case .unknown(let identifier, _): return identifier
         }
     }
@@ -52,6 +54,7 @@ public enum ServerRequest: Decodable
         case .removeProvisioningProfiles(let request): return request.version
         case .removeApp(let request): return request.version
         case .enableUnsignedCodeExecution(let request): return request.version
+        case .pairingFile(let request): return request.version
         case .unknown(_, let version): return version
         }
     }
@@ -99,6 +102,10 @@ public enum ServerRequest: Decodable
             let request = try EnableUnsignedCodeExecutionRequest(from: decoder)
             self = .enableUnsignedCodeExecution(request)
             
+        case "PairingFileRequest":
+            let request = try PairingFileRequest(from: decoder)
+            self = .pairingFile(request)
+
         default:
             self = .unknown(identifier: identifier, version: version)
         }
@@ -113,6 +120,7 @@ public enum ServerResponse: Decodable
     case removeProvisioningProfiles(RemoveProvisioningProfilesResponse)
     case removeApp(RemoveAppResponse)
     case enableUnsignedCodeExecution(EnableUnsignedCodeExecutionResponse)
+    case pairingFile(PairingFileResponse)
     case error(ErrorResponse)
     case unknown(identifier: String, version: Int)
     
@@ -125,6 +133,7 @@ public enum ServerResponse: Decodable
         case .removeProvisioningProfiles(let response): return response.identifier
         case .removeApp(let response): return response.identifier
         case .enableUnsignedCodeExecution(let response): return response.identifier
+        case .pairingFile(let response): return response.identifier
         case .error(let response): return response.identifier
         case .unknown(let identifier, _): return identifier
         }
@@ -139,6 +148,7 @@ public enum ServerResponse: Decodable
         case .removeProvisioningProfiles(let response): return response.version
         case .removeApp(let response): return response.version
         case .enableUnsignedCodeExecution(let response): return response.version
+        case .pairingFile(let response): return response.version
         case .error(let response): return response.version
         case .unknown(_, let version): return version
         }
@@ -183,6 +193,10 @@ public enum ServerResponse: Decodable
             let response = try EnableUnsignedCodeExecutionResponse(from: decoder)
             self = .enableUnsignedCodeExecution(response)
             
+        case "PairingFileResponse":
+            let response = try PairingFileResponse(from: decoder)
+            self = .pairingFile(response)
+
         case "ErrorResponse":
             let response = try ErrorResponse(from: decoder)
             self = .error(response)
@@ -464,5 +478,31 @@ public struct EnableUnsignedCodeExecutionResponse: ServerMessageProtocol
     
     public init()
     {
+    }
+}
+
+public struct PairingFileRequest: ServerMessageProtocol
+{
+    public var version = 1
+    public var identifier = "PairingFileRequest"
+
+    public var udid: String
+
+    public init(udid: String)
+    {
+        self.udid = udid
+    }
+}
+
+public struct PairingFileResponse: ServerMessageProtocol
+{
+    public var version = 1
+    public var identifier = "PairingFileResponse"
+
+    public var pairingFile: Data
+
+    public init(pairingFile: Data)
+    {
+        self.pairingFile = pairingFile
     }
 }

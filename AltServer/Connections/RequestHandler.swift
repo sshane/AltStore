@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OSLog
 
 typealias ServerConnectionManager = ConnectionManager<ServerRequestHandler>
 
@@ -144,6 +145,30 @@ struct ServerRequestHandler: RequestHandler
         }
     }
     
+    func handlePairingFileRequest(_ request: PairingFileRequest, for connection: Connection, completionHandler: @escaping (Result<PairingFileResponse, Error>) -> Void)
+    {
+        // Shown on-device in Settings → General → VPN & Device Management.
+        let hostName = "AltServer on \(Host.current().localizedName ?? "Mac")"
+
+        Task<Void, Never> {
+            do
+            {
+                let pairingFile = try await DevicePairingManager.shared.generatePairingFile(forDeviceWithUDID: request.udid, hostName: hostName)
+
+                // Log byte count only; bytes contain sensitive identifier we don't want to expose.
+                Logger.main.notice("Generated pairing file for device \(request.udid, privacy: .public) (\(pairingFile.count) bytes)")
+
+                let response = PairingFileResponse(pairingFile: pairingFile)
+                completionHandler(.success(response))
+            }
+            catch
+            {
+                Logger.main.error("Failed to generate pairing file for device \(request.udid, privacy: .public). \(error.localizedDescription, privacy: .public)")
+                completionHandler(.failure(ALTServerError(error)))
+            }
+        }
+    }
+
     func handleEnableUnsignedCodeExecutionRequest(_ request: EnableUnsignedCodeExecutionRequest, for connection: Connection, completionHandler: @escaping (Result<EnableUnsignedCodeExecutionResponse, Error>) -> Void)
     {
         guard let device = ALTDeviceManager.shared.availableDevices.first(where: { $0.identifier == request.udid }) else { return completionHandler(.failure(ALTServerError(.deviceNotFound))) }

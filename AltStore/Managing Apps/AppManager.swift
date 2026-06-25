@@ -12,12 +12,15 @@ import UserNotifications
 import MobileCoreServices
 import Intents
 import Combine
+import CryptoKit
 import WidgetKit
 import UniformTypeIdentifiers
 
 import AltStoreCore
 import AltSign
 import Roxas
+
+import Minimuxer
 
 extension AppManager
 {
@@ -92,6 +95,71 @@ class AppManager: ObservableObject
                 installedApp.isRefreshing = isRefreshing
             }
             .store(in: &self.cancellables)
+    }
+}
+
+extension AppManager
+{
+    // Keychain-first (via Settings, most up-to-date if it exists), bundle as fallback.
+    var devicePairingFile: Data? {
+        if let keychainData = Keychain.shared.devicePairingFile
+        {
+            return keychainData
+        }
+
+        // Bundle fallback requires machineIdentifier for decryption.
+        guard let encryptedData = try? Data(contentsOf: Bundle.main.pairingFileURL),
+              let machineIdentifier = Keychain.shared.signingCertificatePassword
+        else { return nil }
+
+        let key = SymmetricKey(data: SHA256.hash(data: machineIdentifier.data(using: .utf8)!)) // Swift string, always valid UTF-8
+
+        do
+        {
+            let sealedBox = try AES.GCM.SealedBox(combined: encryptedData)
+            return try AES.GCM.open(sealedBox, using: key)
+        }
+        catch
+        {
+            // Bundle present + key present but decrypt failed
+            Logger.sideload.error("Bundled pairing file decrypt failed: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+    }
+
+    // Starts on-device connection via minimuxer (idempotent).
+    func startOnDeviceConnection() throws
+    {
+        guard
+            let pairingData = self.devicePairingFile,
+            let pairingFile = String(data: pairingData, encoding: .utf8)
+        else { throw OperationError.missingPairingFile() }
+
+        let logPath = URL.documentsDirectory.appending(path: "minimuxer.txt").path
+
+        do
+        {
+            Minimuxer.retargetUsbmuxdAddr()
+            try Minimuxer.start(pairingFile: pairingFile, logPath: logPath)
+        }
+        catch
+        {
+            Logger.sideload.error("Failed to start device client: \(error.localizedDescription, privacy: .public)")
+            throw (error as NSError).withLocalizedFailure(String(localized: "AltStore couldn’t start the device client."))
+        }
+
+        guard self.isReachableOnDevice() else { throw OperationError.vpnNotConnected() }
+    }
+
+    // Returns false when the VPN tunnel is down, the network is unavailable, or the device isn't responding.
+    func isReachableOnDevice() -> Bool
+    {
+        guard Minimuxer.testDeviceConnection(ifaddr: "10.7.0.1") else
+        {
+            Logger.sideload.error("Device not reachable at 10.7.0.1 — VPN tunnel likely down.")
+            return false
+        }
+        return true
     }
 }
 
@@ -209,6 +277,27 @@ extension AppManager
         return findServerOperation
     }
     
+    // Establishes how we'll reach the device for the current mode: starts the device session
+    // when a pairing file is configured (Remote AltServer), otherwise discovers an AltServer.
+    @discardableResult
+    func prepareServer(context: OperationContext = OperationContext()) -> Foundation.Operation
+    {
+        guard AppManager.shared.devicePairingFile != nil else
+        {
+            return self.findServer(context: context) { _ in }
+        }
+
+        // Starts minimuxer on-device to enable sideloading via the pairing file.
+        let startDeviceSessionOperation = RSTAsyncBlockOperation { (operation) in
+            do { try AppManager.shared.startOnDeviceConnection() }
+            catch { context.error = error }
+            operation.finish()
+        }
+        self.run([startDeviceSessionOperation], context: context)
+
+        return startDeviceSessionOperation
+    }
+
     @discardableResult
     func authenticate(presentingViewController: UIViewController?, context: AuthenticatedOperationContext = AuthenticatedOperationContext(), completionHandler: @escaping (Result<(ALTTeam, ALTCertificate, ALTAppleAPISession), Error>) -> Void) -> AuthenticationOperation
     {
@@ -217,7 +306,7 @@ extension AppManager
             return operation
         }
         
-        let findServerOperation = self.findServer(context: context) { _ in }
+        let prepareServerOperation = self.prepareServer(context: context)
         
         let authenticationOperation = AuthenticationOperation(context: context, presentingViewController: presentingViewController)
         authenticationOperation.resultHandler = { (result) in
@@ -229,11 +318,33 @@ extension AppManager
             
             completionHandler(result)
         }
-        authenticationOperation.addDependency(findServerOperation)
+        authenticationOperation.addDependency(prepareServerOperation)
         
         self.run([authenticationOperation], context: context)
         
         return authenticationOperation
+    }
+
+    @discardableResult
+    func fetchPairingFile(context: OperationContext = OperationContext(), completionHandler: @escaping (Result<Void, Error>) -> Void) -> FetchPairingFileOperation
+    {
+        let findServerOperation = self.findServer(context: context) { _ in }
+
+        let fetchPairingFileOperation = FetchPairingFileOperation(context: context)
+        fetchPairingFileOperation.resultHandler = { (result) in
+            switch result
+            {
+            case .failure(let error): context.error = error
+            case .success: break
+            }
+
+            completionHandler(result)
+        }
+        fetchPairingFileOperation.addDependency(findServerOperation)
+
+        self.run([fetchPairingFileOperation], context: context)
+
+        return fetchPairingFileOperation
     }
     
     func deactivateApps(for app: ALTApplication, presentingViewController: UIViewController, completion: @escaping (Result<Void, Error>) -> Void)
@@ -795,13 +906,13 @@ extension AppManager
             // authentication, so we keep it separate.
             let context = OperationContext()
             
-            let findServerOperation = self.findServer(context: context) { _ in }
+            let prepareServerOperation = self.prepareServer(context: context)
             
             let deactivateAppOperation = DeactivateAppOperation(app: installedApp, context: context)
             deactivateAppOperation.resultHandler = { (result) in
                 completionHandler(result)
             }
-            deactivateAppOperation.addDependency(findServerOperation)
+            deactivateAppOperation.addDependency(prepareServerOperation)
             
             self.run([deactivateAppOperation], context: context, requiresSerialQueue: true)
         }
@@ -1006,7 +1117,7 @@ extension AppManager
             }
         }
 
-        if Keychain.shared.devicePairingFile == nil
+        if AppManager.shared.devicePairingFile == nil
         {
             /* Send */
             let sendAppOperation = SendAppOperation(context: context)
@@ -1548,7 +1659,7 @@ private extension AppManager
 
         var sendAppOperation: SendAppOperation?
 
-        if Keychain.shared.devicePairingFile == nil
+        if AppManager.shared.devicePairingFile == nil
         {
             /* Send */
             let operation = SendAppOperation(context: context)
@@ -2243,117 +2354,5 @@ private extension AppManager
         
         let text = textField.text ?? ""
         self.requestUDIDAction?.isEnabled = (text.count == 40) || (text.count == 25 && text.contains("-"))
-    }
-}
-
-@MainActor
-extension AppManager
-{
-    @discardableResult
-    func updateAnisetteServerURL(presentingViewController: UIViewController) async throws -> URL
-    {
-        var message = String(localized: "Enter the URL of a remote anisette server to sideload apps without AltServer.")
-
-        while true
-        {
-            do
-            {
-                let serverURL = try await self.showAnisetteServerAlert(presentingViewController: presentingViewController, message: message)
-                try await self.validate(anisetteServerURL: serverURL)
-
-                UserDefaults.shared.anisetteServerURL = serverURL
-                Keychain.shared.anisetteADIPB = nil // adi.pb is provisioned against a specific server; clear it so we can re-provision cleanly.
-
-                return serverURL
-            }
-            catch let error as CancellationError
-            {
-                throw error
-            }
-            catch
-            {
-                Logger.main.error("Anisette server validation failed: \(error.localizedDescription, privacy: .public)")
-                message = error.localizedDescription
-            }
-        }
-    }
-
-    private func showAnisetteServerAlert(presentingViewController: UIViewController, message: String) async throws -> URL
-    {
-        let alertController = UIAlertController(title: String(localized: "Remote Server URL"), message: message, preferredStyle: .alert)
-
-        let existingURL = UserDefaults.shared.anisetteServerURL
-
-        try await withCheckedThrowingContinuation { continuation in
-            let saveAction = UIAlertAction(title: String(localized: "Save"), style: .default) { _ in
-                continuation.resume()
-            }
-            saveAction.isEnabled = (existingURL != nil)
-
-            let cancelAction = UIAlertAction(title: UIAlertAction.cancel.title, style: UIAlertAction.cancel.style) { _ in
-                continuation.resume(throwing: CancellationError())
-            }
-
-            alertController.addAction(saveAction)
-            alertController.addAction(cancelAction)
-
-            alertController.addTextField { textField in
-                textField.placeholder = "https://"
-                textField.text = existingURL?.absoluteString
-                textField.textContentType = .URL
-                textField.keyboardType = .URL
-                textField.autocorrectionType = .no
-                textField.enablesReturnKeyAutomatically = true
-
-                textField.addAction(UIAction { [weak saveAction, weak textField] _ in
-                    saveAction?.isEnabled = textField?.text?.contains(".") ?? false
-                }, for: .editingChanged)
-            }
-
-            presentingViewController.present(alertController, animated: true)
-        }
-
-        let textField = alertController.textFields!.first!
-
-        var input = (textField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        if !(input.hasPrefix("https://") || input.hasPrefix("http://"))
-        {
-            input = "https://\(input)"
-        }
-
-        guard let serverURL = URL(string: input) else { throw OperationError.unknown(failureReason: String(localized: "The provided URL is invalid.")) }
-        return serverURL
-    }
-
-    private func validate(anisetteServerURL url: URL) async throws
-    {
-        let clientInfoURL = url.appending(components: "v3", "client_info")
-
-        var request = URLRequest(url: clientInfoURL)
-        request.timeoutInterval = 30
-
-        let (data, urlResponse) = try await URLSession.shared.data(for: request)
-
-        if let urlResponse = urlResponse as? HTTPURLResponse
-        {
-            // URL points at something that isn't an anisette server.
-            if urlResponse.statusCode == 404
-            {
-                throw OperationError.invalidAnisetteServer()
-            }
-
-            guard urlResponse.statusCode == 200 else { throw URLError(.badServerResponse) }
-        }
-
-        struct Response: Decodable
-        {
-            var clientInfo: String
-            var userAgent: String
-        }
-
-        let decoder = Foundation.JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-
-        _ = try decoder.decode(Response.self, from: data)
     }
 }

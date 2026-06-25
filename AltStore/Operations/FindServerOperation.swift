@@ -11,8 +11,6 @@ import Foundation
 import AltStoreCore
 import Roxas
 
-import Minimuxer
-
 private let ReceivedServerConnectionResponse: @convention(c) (CFNotificationCenter?, UnsafeMutableRawPointer?, CFNotificationName?, UnsafeRawPointer?, CFDictionary?) -> Void =
 { (center, observer, name, object, userInfo) in
     guard let name = name, let observer = observer else { return }
@@ -25,7 +23,7 @@ private let ReceivedServerConnectionResponse: @convention(c) (CFNotificationCent
 class FindServerOperation: ResultOperation<Server?>, @unchecked Sendable
 {
     let context: OperationContext
-    
+
     private var isWiredServerConnectionAvailable = false
     private var localServerMachServiceName: String?
     
@@ -62,22 +60,6 @@ class FindServerOperation: ResultOperation<Server?>, @unchecked Sendable
         CFNotificationCenterPostNotification(notificationCenter, .wiredServerConnectionAvailableRequest, nil, nil, true)
         
         self.discoverLocalServer()
-        
-        // If device pairing file exists, start minimuxer and skip server detection.
-        if Keychain.shared.devicePairingFile != nil
-        {
-            do
-            {
-                try Minimuxer.startSession()
-                self.finish(.success(nil))
-            }
-            catch
-            {
-                Logger.sideload.error("Failed to start Minimuxer session: \(error.localizedDescription)")
-                self.finish(.failure(error))
-            }
-            return
-        }
         
         // Wait for either callback or timeout.
         DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {

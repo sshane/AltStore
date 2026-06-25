@@ -45,8 +45,8 @@ class RemoveAppOperation: ResultOperation<InstalledApp>, @unchecked Sendable
             {
                 do
                 {
-                    // Prefer minimuxer when the user has imported a pairing file; fall back to AltServer otherwise.
-                    if Keychain.shared.devicePairingFile != nil
+                    // Prefer minimuxer when a pairing file is available; fall back to AltServer otherwise.
+                    if AppManager.shared.devicePairingFile != nil
                     {
                         try self.removeOnDevice(bundleIdentifier: bundleIdentifier)
                     }
@@ -91,7 +91,7 @@ private extension RemoveAppOperation
 {
     func removeOnDevice(bundleIdentifier: String) throws
     {
-        guard Minimuxer.isDeviceReachable() else { throw OperationError.vpnNotConnected() }
+        guard AppManager.shared.isReachableOnDevice() else { throw OperationError.vpnNotConnected() }
 
         do
         {

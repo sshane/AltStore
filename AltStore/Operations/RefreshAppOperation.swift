@@ -49,8 +49,8 @@ class RefreshAppOperation: ResultOperation<InstalledApp>, @unchecked Sendable
         {
             do
             {
-                // Prefer minimuxer when the user has imported a pairing file; fall back to AltServer otherwise.
-                if Keychain.shared.devicePairingFile != nil
+                // Prefer minimuxer when a pairing file is available; fall back to AltServer otherwise.
+                if AppManager.shared.devicePairingFile != nil
                 {
                     try self.refreshOnDevice(profiles: Set(profiles.values))
                 }
@@ -80,7 +80,7 @@ private extension RefreshAppOperation
 {
     func refreshOnDevice(profiles: Set<ALTProvisioningProfile>) throws
     {
-        guard Minimuxer.isDeviceReachable() else { throw OperationError.vpnNotConnected() }
+        guard AppManager.shared.isReachableOnDevice() else { throw OperationError.vpnNotConnected() }
 
         for profile in profiles
         {
