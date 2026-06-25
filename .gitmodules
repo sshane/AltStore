@@ -18,4 +18,4 @@
 	url = https://github.com/chockenberry/MarkdownAttributedString.git
 [submodule "Dependencies/idevice"]
 	path = Dependencies/idevice
-	url = https://github.com/jkcoxson/idevice.git
+	url = https://github.com/altstoreio/idevice.git
