@@ -1,3 +1,50 @@
+> ### Fork note — macOS 26/27 support
+>
+> This branch (`macos-26-27`) is [AltStore Classic](https://github.com/altstoreio/AltStore/tree/classic)
+> with the minimum changes needed to build and sign in on current macOS. Upstream's issue tracker
+> is not currently maintained ([#1610](https://github.com/altstoreio/AltStore/issues/1610)), so
+> these fixes live here.
+>
+> **What's fixed**
+>
+> - **Anisette on macOS 26+.** `adid` no longer generates one-time passwords for unentitled apps,
+>   so AOSKit returns an empty dictionary and AltServer can't produce anisette itself
+>   ([#1751](https://github.com/altstoreio/AltStore/issues/1751)). Includes jslay88's server support
+>   from [#1770](https://github.com/altstoreio/AltStore/pull/1770); set an anisette server with
+>   `ALTSERVER_ANISETTE_SERVER` or the `AnisetteServerURL` default.
+> - **The two-factor loop.** AltSign presented an Xcode 11.2 (2019) client identity that Apple no
+>   longer grants HSA2 trust to: a code is accepted with HTTP 200, then the next login is challenged
+>   again ([#1737](https://github.com/altstoreio/AltStore/issues/1737),
+>   [#1772](https://github.com/altstoreio/AltStore/issues/1772)). AltServer now derives the identity
+>   from the running Mac; AltStore uses a fixed one whose OS and Xcode versions agree.
+> - **Building with Xcode 27.** The vendored `libcurl.a` predates 8-byte alignment and can no longer
+>   be linked, `-ld_classic` is gone, and `AltSign-Dynamic` couldn't resolve the `alt_cc*` wrappers.
+>
+> **Building**
+>
+> ```sh
+> git submodule update --init --recursive
+> Scripts/fetch-idevice-xcframework.sh
+>
+> xcodebuild -workspace AltStore.xcworkspace -scheme AltStore \
+>   -configuration Release -destination 'generic/platform=iOS' \
+>   IPHONEOS_DEPLOYMENT_TARGET=17.4
+>
+> xcodebuild -workspace AltStore.xcworkspace -scheme AltServer \
+>   -configuration Release MACOSX_DEPLOYMENT_TARGET=13.0
+> ```
+>
+> `IPHONEOS_DEPLOYMENT_TARGET` is required because the vendored pods and Roxas still declare
+> 12.0–14.0. `IDevice.xcframework` is built from Rust and isn't committed, so the script fetches
+> the prebuilt one.
+>
+> **For on-device sideloading**, AltStore also needs a pairing file (Settings → *Configure Remote
+> AltServer…*, which requires AltServer over USB once) and [StosVPN](https://apps.apple.com/app/id6744003051)
+> running — it provides the `10.7.0.1` loopback AltStore uses to reach the device.
+>
+> **Known limitation:** the OTA patch path is compiled out (`NO_FRAGMENTZIP`) because fragmentzip
+> links against the unusable `libcurl.a`.
+
 # AltStore
 
 > AltStore is an alternative app store for non-jailbroken iOS devices. 
