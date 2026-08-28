@@ -175,7 +175,7 @@ private extension PatchAppOperation
     func downloadArchive(from update: OTAUpdate) -> AnyPublisher<URL, Error>
     {
         Just(()).tryMap {
-            #if targetEnvironment(simulator)
+            #if targetEnvironment(simulator) || NO_FRAGMENTZIP
             throw PatchAppError.unsupportedOperatingSystemVersion(ProcessInfo.processInfo.operatingSystemVersion)
             #else
             
@@ -210,7 +210,7 @@ private extension PatchAppOperation
     func extractSpotlightFromArchive(at archiveURL: URL) -> AnyPublisher<URL, Error>
     {
         Just(()).tryMap {
-            #if targetEnvironment(simulator)
+            #if targetEnvironment(simulator) || NO_FRAGMENTZIP
             throw PatchAppError.unsupportedOperatingSystemVersion(ProcessInfo.processInfo.operatingSystemVersion)
             #else
             

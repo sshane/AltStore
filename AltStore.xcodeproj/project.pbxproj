@@ -1409,11 +1409,9 @@
 				823661F92FA917BB0063A710 /* Minimuxer in Frameworks */,
 				CA00000175E1B0E000000001 /* libimobiledevice.a in Frameworks */,
 				D533E8B72727841800A9B5DD /* libAppleArchive.tbd in Frameworks */,
-				D533E8BE2727BBF800A9B5DD /* libcurl.a in Frameworks */,
 				D535CEE82BE95D4C00F96119 /* TelemetryClient in Frameworks */,
 				BF1614F1250822F100767AEA /* Roxas.framework in Frameworks */,
 				BF088D332501A4FF008082D9 /* OpenSSL.xcframework in Frameworks */,
-				D533E8BC2727BBEE00A9B5DD /* libfragmentzip.a in Frameworks */,
 				BF66EE852501AE50007EE018 /* AltStoreCore.framework in Frameworks */,
 				2A77E3D272F3D92436FAC272 /* Pods_AltStore.framework in Frameworks */,
 			);
@@ -4551,11 +4549,9 @@
 					"$(PROJECT_DIR)/Dependencies/libcurl",
 				);
 				MARKETING_VERSION = 2.3b2;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-Wl,-ld_classic",
-				);
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.rileytestut.AltStore;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) NO_FRAGMENTZIP";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "AltStore/AltStore-Bridging-Header.h";
@@ -4590,11 +4586,9 @@
 					"$(PROJECT_DIR)/Dependencies/libcurl",
 				);
 				MARKETING_VERSION = 2.3b2;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-Wl,-ld_classic",
-				);
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.rileytestut.AltStore;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) NO_FRAGMENTZIP";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "AltStore/AltStore-Bridging-Header.h";
