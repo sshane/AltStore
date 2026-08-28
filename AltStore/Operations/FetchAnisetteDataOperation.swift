@@ -215,7 +215,17 @@ private extension FetchAnisetteDataOperation
         let decoder = Foundation.JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         
-        let response: Response = try await self.send(URLRequest(url: clientInfoURL), decoder: decoder)
+        let serverResponse: Response = try await self.send(URLRequest(url: clientInfoURL), decoder: decoder)
+
+        // Anisette servers report a fixed `macOS;13.1` with a 2019 Xcode, and Apple will not grant
+        // HSA2 trust to that identity: a verification code is accepted, but the next login is
+        // challenged again. Unlike AltServer there's no Mac to describe here, so present a fixed
+        // identity whose OS and Xcode versions are consistent with each other.
+        let response = Response(clientInfo: AnisetteServer.clientInfo, userAgent: AnisetteServer.userAgent)
+        if serverResponse.clientInfo != response.clientInfo
+        {
+            Logger.sideload.notice("Replacing anisette client identity \(serverResponse.clientInfo, privacy: .public) with \(response.clientInfo, privacy: .public)")
+        }
 
         // 2. Load or generate the persisted device identity (16 random bytes -> derives identifier, localUserID, deviceID)
         let identity: AnisetteIdentity

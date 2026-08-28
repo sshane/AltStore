@@ -17,6 +17,38 @@ private extension Bundle
     }
 }
 
+extension AnisetteDataManager
+{
+    /// Xcode's bundle identifier and version, as Apple's servers expect to see them.
+    static let xcodeClientIdentifier = "com.apple.dt.Xcode/25183.54.10"
+
+    /// `X-MMe-Client-Info` describing this Mac.
+    ///
+    /// Apple requires the device, OS, and Xcode version to be internally consistent before it will
+    /// grant HSA2 trust. Anisette sources report a fixed `macOS;13.1` regardless of the host, which
+    /// no current Xcode could be running on, so the value they report can't be used as-is.
+    static var clientInfo: String {
+        let osVersion: OperatingSystemVersion
+        let buildVersion: String
+
+        if let build = ProcessInfo.processInfo.operatingSystemBuildVersion
+        {
+            osVersion = ProcessInfo.processInfo.operatingSystemVersion
+            buildVersion = build
+        }
+        else
+        {
+            osVersion = OperatingSystemVersion(majorVersion: 13, minorVersion: 4, patchVersion: 0)
+            buildVersion = "22F66"
+        }
+
+        let deviceModel = ProcessInfo.processInfo.deviceModel ?? "iMac21,1"
+        let osName = (osVersion.majorVersion < 11) ? "Mac OS X" : "macOS"
+
+        return "<\(deviceModel)> <\(osName);\(osVersion.stringValue);\(buildVersion)> <com.apple.AuthKit/1 (\(xcodeClientIdentifier))>"
+    }
+}
+
 private extension ALTAnisetteData
 {
     func sanitize(byReplacingBundleID bundleID: String)
@@ -24,7 +56,7 @@ private extension ALTAnisetteData
         guard let range = self.deviceDescription.lowercased().range(of: "(" + bundleID.lowercased()) else { return }
         
         var adjustedDescription = self.deviceDescription[..<range.lowerBound]
-        adjustedDescription += "(com.apple.dt.Xcode/3594.4.19)>"
+        adjustedDescription += "(\(AnisetteDataManager.xcodeClientIdentifier))>"
         
         self.deviceDescription = String(adjustedDescription)
     }
@@ -99,6 +131,18 @@ class AnisetteDataManager: NSObject
     }
     
     func requestAnisetteData(_ completion: @escaping (Result<ALTAnisetteData, Error>) -> Void)
+    {
+        self.requestAnisetteDataFromAnySource { (result) in
+            if case .success(let anisetteData) = result, anisetteData.deviceDescription != AnisetteDataManager.clientInfo
+            {
+                anisetteData.deviceDescription = AnisetteDataManager.clientInfo
+            }
+
+            completion(result)
+        }
+    }
+
+    private func requestAnisetteDataFromAnySource(_ completion: @escaping (Result<ALTAnisetteData, Error>) -> Void)
     {
         if let serverURL = UserDefaults.standard.anisetteServerURL
         {
@@ -189,7 +233,7 @@ private extension AnisetteDataManager
             let deviceModel = ProcessInfo.processInfo.deviceModel ?? "iMac21,1"
             let osName = (osVersion.majorVersion < 11) ? "Mac OS X" : "macOS"
             
-            let serverFriendlyDescription = "<\(deviceModel)> <\(osName);\(osVersion.stringValue);\(buildVersion)> <com.apple.AuthKit/1 (com.apple.dt.Xcode/3594.4.19)>"
+            let serverFriendlyDescription = AnisetteDataManager.clientInfo
             
             let anisetteData = ALTAnisetteData(machineID: machineID,
                                                oneTimePassword: oneTimePassword,
